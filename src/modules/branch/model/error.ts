@@ -1,0 +1,7 @@
+export const ErrBranchNameDublicate = new Error('Branch name already exists')
+export const ErrBranchNotfound = new Error('Branch not found')
+export const ErrBranchDeleted = new Error('Branch deleted')
+export const ErrBranchNameTooShort = new Error('Branch Name Too Short')
+export const ErrBranchValueValidate = new Error('Branch Value Validate Error')
+export const ErrBranchIdNotFound = new Error('Branch ID Not Found')
+export const ErrBranchIdInvalid = new Error('Branch ID Invalid')
