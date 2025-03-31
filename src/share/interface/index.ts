@@ -7,6 +7,8 @@ export interface IQueryRepository<Entity, CondType> {
   detail(id: string): Promise<Entity | null>;
   list(cond: CondType, paging: pagingDTO): Promise<Array<Entity>>;
   byName(name: string): Promise<Entity | null>;
+  byCond(cond: CondType): Promise<Entity | null>;
+  listByCond(cond: CondType, paging: pagingDTO): Promise<Array<Entity>>;
 }
 
 export interface ICommandRepository<Entity, UpdateDTO> {

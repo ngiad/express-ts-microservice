@@ -9,8 +9,6 @@ export enum BranchStatus {
   Featured = "featured",
 }
 
-export const modelBranchName = 'branch'
-
 export const BranchSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(2, ErrBranchNameTooShort.message),

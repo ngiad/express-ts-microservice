@@ -32,8 +32,8 @@ export const BranchCondSchema = BaseCondSchema.merge(
     location: z.union([z.string().nullable(), z.record(z.any()) as any]).optional(),
     tagLine: z.union([z.string().nullable(), z.record(z.any()) as any]).optional(),
     status: z.union([z.nativeEnum(BranchStatus), z.record(z.any()) as any]).optional(),
-    createdAt: z.union([z.date(), z.record(z.any()) as any]).optional(),
-    updatedAt: z.union([z.date(), z.record(z.any()) as any]).optional(),
+    createdAt: z.coerce.date().optional(),
+    updatedAt: z.coerce.date().optional(),
   })
 );
 

@@ -1,4 +1,4 @@
-import { Sequelize, Optional, Op } from "sequelize";
+import { Sequelize } from "sequelize";
 import { IRepository } from "../interface";
 import { pagingDTO } from "../model/paging";
 import { BaseStatus } from "../model/base-status";
@@ -69,4 +69,35 @@ export abstract class BaseRepoSequelize<
     });
     return result as unknown as Entity | null;
   };
+
+  byCond = async (cond: CondType): Promise<Entity | null> => {
+    const result = await this.sequalize.models[this.modelName].findOne({
+      where: cond as any,
+    });
+
+    if(!result) return null;
+    return result as unknown as Entity;
+  }
+
+  listByCond = async(cond: CondType, paging: pagingDTO): Promise<Array<Entity>> => {
+    // const { page, limit } = paging;
+
+    // return this.sequalize.models[this.modelName].findAll({
+    //   where: cond as any,
+    //   order: [["id", "DESC"]],
+    //   limit,
+    //   offset: (page - 1) * limit,
+    // }).then((rows) => rows.map((item) => item.get({ plain: true }) as Entity));
+    const { page, limit } = paging;
+
+    const { rows, count } = await this.sequalize.models[this.modelName].findAndCountAll({
+      where: cond as any,
+      order: [["id", "DESC"]],
+      limit,
+      offset: (page - 1) * limit,
+    });
+
+    paging.total = count;
+    return rows.map((item) => item.get({ plain: true }) as Entity);
+  }
 }

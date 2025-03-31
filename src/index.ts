@@ -2,6 +2,7 @@ import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import { setupCategoryModule } from "./modules/category";
 import { sequelize } from "./share/component/sequelize";
+import { setupBranchModule } from "./modules/branch";
 
 dotenv.config();
 
@@ -17,7 +18,7 @@ dotenv.config();
 
     app.use(express.json());
     app.use("/v1/api", setupCategoryModule(sequelize));
-
+    app.use("/v1/api", setupBranchModule(sequelize));
     app.listen(port, () => {
       console.log(`server is running on : http://localhost:${port}`);
     });

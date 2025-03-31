@@ -11,13 +11,13 @@ export class ResponseSuccess<T> {
     res.status(this.status).json({
       success: true,
       message: this.message,
-      data: this.data,
+      value: this.data,
     });
   }
 }
 
-export class ResponseSuccessList<T> extends ResponseSuccess<T[]> {
-  constructor(data: T[] | null = null) {
+export class ResponseSuccessList<T> extends ResponseSuccess<T> {
+  constructor(data: T | null = null) {
     super(data, 200, "List retrieved successfully");
   }
 }

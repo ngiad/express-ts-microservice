@@ -16,12 +16,12 @@ export interface ICategoryRepository extends ICommandRepository, IQueryRepositor
 export interface IQueryRepository{
     detail(id: string): Promise<CategoryType | null>;
     list(cond: CategoryCondType, paging: pagingDTO): Promise<Array<CategoryType>>;
+    byName(name: string) : Promise<CategoryType | null>
 }
 
 export interface ICommandRepository{
     insert(data: CategoryType): Promise<CategoryType>;
     update(id: string, data: CategoryUpdateType): Promise<CategoryType>;
     delete(id: string,isHard : boolean): Promise<boolean>;
-    byName(name: string) : Promise<CategoryType | null>
 }
 
