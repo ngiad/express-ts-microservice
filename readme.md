@@ -1,6 +1,6 @@
 # Dự án E-commerce Microservice (Node.js, Express, TypeScript)
 
-Đây là một microservice được xây dựng cho nền tảng thương mại điện tử, sử dụng ngăn xếp công nghệ hiện đại bao gồm Node.js, Express.js và TypeScript. Dự án sử dụng MySQL làm cơ sở dữ liệu với Sequelize ORM để tương tác và Zod để xác thực dữ liệu đầu vào một cách hiệu quả và an toàn.
+Đây là một microservice được xây dựng cho nền tảng thương mại điện tử, **tuân theo kiến trúc Hexagonal (Ports and Adapters)**, và sử dụng ngăn xếp công nghệ hiện đại bao gồm Node.js, Express.js và TypeScript. Dự án sử dụng MySQL làm cơ sở dữ liệu với Sequelize ORM để tương tác và Zod để xác thực dữ liệu đầu vào một cách hiệu quả và an toàn.
 
 ## Công nghệ sử dụng
 
@@ -13,6 +13,16 @@
 * **Quản lý biến môi trường:** dotenv
 * **Containerization (CSDL):** Docker
 * **Dev Tools:** Nodemon, ts-node
+
+## Kiến trúc (Architecture)
+
+Dự án này áp dụng kiến trúc **Hexagonal (hay Ports and Adapters)**. Mục tiêu chính của kiến trúc này là:
+
+* **Tách biệt logic nghiệp vụ cốt lõi (Domain & Application Core):** Giữ cho phần xử lý nghiệp vụ không phụ thuộc trực tiếp vào các chi tiết kỹ thuật bên ngoài như framework web, cơ sở dữ liệu, hay các dịch vụ của bên thứ ba.
+* **Tăng khả năng kiểm thử (Testability):** Logic nghiệp vụ có thể được kiểm thử độc lập mà không cần khởi tạo toàn bộ ứng dụng hay cơ sở dữ liệu.
+* **Linh hoạt và dễ thay thế:** Dễ dàng thay đổi hoặc thay thế các thành phần bên ngoài (ví dụ: đổi cơ sở dữ liệu, thay đổi framework web) mà ít ảnh hưởng đến phần lõi nghiệp vụ.
+
+Kiến trúc này được thực hiện thông qua việc định nghĩa rõ ràng các **Ports** (là các interface hoặc abstract class định nghĩa cách tương tác với lõi ứng dụng) và các **Adapters** (là các thành phần triển khai cụ thể các port đó để kết nối với công nghệ cụ thể - ví dụ: Express adapter, Sequelize adapter).
 
 ## Yêu cầu hệ thống
 
@@ -41,7 +51,7 @@
     docker run -d --name mysql-ecommerce -e MYSQL_ROOT_PASSWORD="your_password" -e MYSQL_USER="demo" -e MYSQL_PASSWORD="your_password" -e MYSQL_DATABASE="demo" -p 3309:3306 bitnami/mysql:8.0
     ```
     * Lệnh này sẽ tạo một container tên là `mysql-ecommerce`.
-    * Cơ sở dữ liệu `demo` sẽ được tạo với user `demo` và password `your_password`.
+    * Cơ sở dữ liệu `demo` sẽ được tạo với user `demo` và password `your_password`. **Hãy thay `your_password` bằng một mật khẩu an toàn của bạn.**
     * Cổng `3306` của container MySQL sẽ được ánh xạ tới cổng `3309` trên máy host của bạn.
     * Bạn có thể thay đổi mật khẩu hoặc tên nếu muốn, nhưng nhớ cập nhật trong file `.env`.
 
@@ -57,13 +67,24 @@
     DB_HOST=localhost
     DB_PORT=3309 # Cổng ánh xạ trên máy host (từ lệnh docker)
     DB_USERNAME=demo
-    DB_PASSWORD=ecommerce
+    DB_PASSWORD=your_password # !! Thay bằng mật khẩu bạn đã đặt ở bước 3
     DB_DATABASE=demo
     DB_DIALECT=mysql
+
+    # Các biến môi trường khác (nếu có)
+    # JWT_SECRET=...
     ```
     * **Quan trọng:** Đảm bảo các thông tin kết nối CSDL trong file `.env` khớp với cấu hình khi bạn chạy container Docker (đặc biệt là `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`).
 
-5.  **Khởi động dự án (Development Mode):**
+5.  **Đồng bộ hóa Schema Cơ sở dữ liệu:**
+    Dự án này cấu hình Sequelize để tự động đồng bộ hóa (tạo hoặc cập nhật) cấu trúc các bảng trong cơ sở dữ liệu dựa trên các Models đã được định nghĩa trong mã nguồn (sử dụng phương thức `sequelize.sync()`). Việc này thường diễn ra khi ứng dụng khởi động và kết nối tới cơ sở dữ liệu thành công.
+
+    **Lưu ý quan trọng:**
+    * Phương thức `sequelize.sync()` rất hữu ích cho môi trường phát triển (development) để nhanh chóng thiết lập schema.
+    * Tuy nhiên, việc sử dụng `sync()` (đặc biệt với các tùy chọn như `{ force: true }` hoặc `{ alter: true }`) **không được khuyến khích** trong môi trường production vì có thể gây mất dữ liệu hoặc làm thay đổi cấu trúc bảng không mong muốn. Đối với môi trường production, việc quản lý thay đổi schema nên được thực hiện thông qua một hệ thống migration chuyên dụng (như `sequelize-cli` hoặc công cụ khác).
+    * Trong dự án này, bạn không cần chạy lệnh migration riêng biệt từ command line. Việc đồng bộ schema sẽ do ứng dụng tự xử lý khi khởi chạy (nếu được lập trình như vậy).
+
+6.  **Khởi động dự án (Development Mode):**
     Chạy lệnh sau để khởi động server với Nodemon (tự động khởi động lại khi có thay đổi code):
     ```bash
     npm start
@@ -76,7 +97,3 @@ Trong file `package.json`, script chính là:
 
 * `npm start`: Khởi chạy ứng dụng ở chế độ development sử dụng `nodemon` và `ts-node`.
 * `npm test`: (Hiện tại chưa có test) - Cần được cấu hình thêm.
-
-## Giấy phép
-
-Dự án này được cấp phép theo Giấy phép ISC. Xem file `LICENSE` để biết chi tiết (nếu có).
