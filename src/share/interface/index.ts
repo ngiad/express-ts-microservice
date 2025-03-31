@@ -16,3 +16,13 @@ export interface ICommandRepository<Entity, UpdateDTO> {
   update(id: string, data: UpdateDTO): Promise<Entity>;
   delete(id: string, isHard: boolean): Promise<boolean>;
 }
+
+
+export interface ICommandHandler<Cmd, Result>{
+  execute(command : Cmd): Promise<Result>; 
+}
+
+
+export interface IQueryHandler<Query, Result>{
+  query(command : Query): Promise<Result>; 
+}

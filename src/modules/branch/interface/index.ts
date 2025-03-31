@@ -28,14 +28,49 @@ export interface IBranchRepository {
 
 
 // command query pattern
+
+
+// command query pattern
 export interface ICreateBranchService{
     data : BranchCreateType;
 }
 
-
-export interface ICommandHandler<Cmd, Result>{
-    execute(command : Cmd): Promise<Result>; 
+export interface IUpdateBranchService{
+    id : string;
+    data : BranchUpdateType;
 }
+
+
+export interface IDeleteBranchService{
+    id : string;
+}
+
+// export interface ICommandHandler<Cmd, Result>{
+//     execute(command : Cmd): Promise<Result>; 
+// }
+
+
+
+// query pattern
+export interface IGetDetailBranch{
+    id : string;
+}
+
+export interface IGetListBranch{
+    query : pagingDTO & BranchCondType;
+}
+
+export interface IGetByCondBranch{
+    query : BranchCondType;
+}
+
+// export interface IQueryHandler<Query, Result>{
+//     query(command : Query): Promise<Result>; 
+// }
+
+
+
+
 
 
 

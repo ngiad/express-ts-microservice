@@ -1,8 +1,9 @@
 import { v7 } from "uuid";
-import { IBranchRepository, ICommandHandler, ICreateBranchService } from "../interface";
+import { IBranchRepository, ICreateBranchService } from "../interface";
 import { BranchStatus, BranchType } from "../model";
 import { BranchCreateSchema } from "../model/dto";
 import { ErrBranchNameDublicate, ErrBranchValueValidate } from "../model/error";
+import { ICommandHandler } from "../../../share/interface";
 
 
 export class CreateBranchService implements ICommandHandler<ICreateBranchService, BranchType> {
