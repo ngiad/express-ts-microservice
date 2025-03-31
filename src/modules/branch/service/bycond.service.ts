@@ -26,7 +26,7 @@ export class GetByCondBranchService implements IQueryHandler<IGetByCondBranch, B
       ...(cond.updatedAt && { updatedAt: { [Op.lte]: cond.updatedAt } }),
     };
 
-    const branch = await this._repository.detail(cond.id);
+    const branch = await this._repository.byCond(whereCondition);
     if (!branch) {
         throw ErrBranchNotfound
     }
@@ -34,6 +34,7 @@ export class GetByCondBranchService implements IQueryHandler<IGetByCondBranch, B
     if(branch.status === BranchStatus.Deleted) {
         throw ErrBranchDeleted
     }
+
     return branch
   };
 }

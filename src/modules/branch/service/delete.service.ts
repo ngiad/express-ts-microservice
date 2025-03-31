@@ -1,5 +1,6 @@
 import { ICommandHandler } from "../../../share/interface";
 import { IBranchRepository, IDeleteBranchService } from "../interface";
+import { ErrBranchDeleted, ErrBranchIdNotFound } from "../model/error";
 
 
 export class BranchDeleteService implements ICommandHandler<IDeleteBranchService, boolean> {    
@@ -8,7 +9,11 @@ export class BranchDeleteService implements ICommandHandler<IDeleteBranchService
   execute = async (command: IDeleteBranchService): Promise<boolean> => {
     const branch = await this._repository.detail(command.id);
     if (!branch) {
-      return false;
+      throw ErrBranchIdNotFound
+    }
+
+    if(branch.status === "deleted") {
+      throw ErrBranchDeleted
     }
     return await this._repository.delete(command.id, false);
   };
