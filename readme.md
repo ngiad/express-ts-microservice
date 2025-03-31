@@ -34,8 +34,8 @@ Kiến trúc này được thực hiện thông qua việc định nghĩa rõ r�
 
 1.  **Clone repository:**
     ```bash
-    git clone <URL_repository_của_bạn>
-    cd <tên_thư_mục_dự_án>
+    git clone https://github.com/ngiad/express-ts-microservice.git
+    cd express-ts-microservice
     ```
 
 2.  **Cài đặt dependencies:**
@@ -57,7 +57,6 @@ Kiến trúc này được thực hiện thông qua việc định nghĩa rõ r�
 
 4.  **Cấu hình Biến môi trường:**
     * Tạo một file tên là `.env` trong thư mục gốc của dự án.
-    * Sao chép nội dung từ file `.env.example` (nếu có) hoặc thêm các biến sau vào file `.env`:
 
     ```env
     # Cấu hình Server
@@ -75,16 +74,8 @@ Kiến trúc này được thực hiện thông qua việc định nghĩa rõ r�
     # JWT_SECRET=...
     ```
     * **Quan trọng:** Đảm bảo các thông tin kết nối CSDL trong file `.env` khớp với cấu hình khi bạn chạy container Docker (đặc biệt là `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`).
-
-5.  **Đồng bộ hóa Schema Cơ sở dữ liệu:**
-    Dự án này cấu hình Sequelize để tự động đồng bộ hóa (tạo hoặc cập nhật) cấu trúc các bảng trong cơ sở dữ liệu dựa trên các Models đã được định nghĩa trong mã nguồn (sử dụng phương thức `sequelize.sync()`). Việc này thường diễn ra khi ứng dụng khởi động và kết nối tới cơ sở dữ liệu thành công.
-
-    **Lưu ý quan trọng:**
-    * Phương thức `sequelize.sync()` rất hữu ích cho môi trường phát triển (development) để nhanh chóng thiết lập schema.
-    * Tuy nhiên, việc sử dụng `sync()` (đặc biệt với các tùy chọn như `{ force: true }` hoặc `{ alter: true }`) **không được khuyến khích** trong môi trường production vì có thể gây mất dữ liệu hoặc làm thay đổi cấu trúc bảng không mong muốn. Đối với môi trường production, việc quản lý thay đổi schema nên được thực hiện thông qua một hệ thống migration chuyên dụng (như `sequelize-cli` hoặc công cụ khác).
-    * Trong dự án này, bạn không cần chạy lệnh migration riêng biệt từ command line. Việc đồng bộ schema sẽ do ứng dụng tự xử lý khi khởi chạy (nếu được lập trình như vậy).
-
-6.  **Khởi động dự án (Development Mode):**
+    
+5.  **Khởi động dự án (Development Mode):**
     Chạy lệnh sau để khởi động server với Nodemon (tự động khởi động lại khi có thay đổi code):
     ```bash
     npm start

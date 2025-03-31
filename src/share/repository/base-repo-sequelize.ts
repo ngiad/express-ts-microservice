@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import { IRepository } from "../interface";
+import { ICommandRepository, IQueryRepository, IRepository } from "../interface";
 import { pagingDTO } from "../model/paging";
 import { BaseStatus } from "../model/base-status";
 
@@ -10,94 +10,35 @@ export abstract class BaseRepoSequelize<
   UpdateType extends {[key: string]: any}
 > implements IRepository<Entity, CondType, UpdateType> {
   constructor(
-    private readonly sequalize: Sequelize,
-    private readonly modelName: string
+    private readonly queryRepo :IQueryRepository<Entity, CondType>,
+    private readonly commandRepo: ICommandRepository<Entity, UpdateType>,
   ) {}
 
   detail = async (id: string): Promise<Entity | null> => {
-    const result = await this.sequalize.models[this.modelName].findByPk(id);
-    if (!result) return null;
-
-    return result.get({ plain: true }) as unknown as Entity;
+    return this.queryRepo.detail(id);
   };
 
-  list = async (cond: CondType, paging: pagingDTO): Promise<Array<Entity>> => {
-    const { page, limit } = paging;
-
-    const { rows, count } = await this.sequalize.models[this.modelName].findAndCountAll({
-      where: cond as any,
-      order: [["id", "DESC"]],
-      limit,
-      offset: (page - 1) * limit,
-    });
-
-    paging.total = count;
-    return rows.map((item) => item.get({ plain: true }) as Entity);
+  list = async (cond: CondType, paging: pagingDTO): Promise<{data : Array<Entity>, paging : pagingDTO}> => {
+    return this.queryRepo.list(cond, paging);
   };
 
   insert = async (data: Entity): Promise<Entity> => {
-    const result = await this.sequalize.models[this.modelName].create(data as any);
-    return result as unknown as Entity;
+    return this.commandRepo.insert(data);
   };
 
   update = async (id: string, data: UpdateType): Promise<Entity> => {
-    await this.sequalize.models[this.modelName].update(data as any, { where: { id } });
-    const updatedRecord = await this.sequalize.models[this.modelName].findByPk(id);
-    if (!updatedRecord) {
-      throw new Error(`Record with id ${id} not found after update`);
-    }
-    return updatedRecord.get({ plain: true }) as unknown as Entity;
+    return this.commandRepo.update(id, data);
   };
 
   delete = async (id: string, isHard: boolean): Promise<boolean> => {
-    if (isHard) {
-      await this.sequalize.models[this.modelName].destroy({ where: { id } });
-      return true;
-    }
-    await this.sequalize.models[this.modelName].update(
-      { status: BaseStatus.Deleted } as any,
-      { where: { id } }
-    );
-    return true;
+    return this.commandRepo.delete(id, isHard);
   };
 
   byName = async (name: string): Promise<Entity | null> => {
-    const result = await this.sequalize.models[this.modelName].findOne({
-      where: {
-        name,
-      },
-    });
-    return result as unknown as Entity | null;
+    return this.queryRepo.byName(name);
   };
 
   byCond = async (cond: CondType): Promise<Entity | null> => {
-    const result = await this.sequalize.models[this.modelName].findOne({
-      where: cond as any,
-    });
-
-    if(!result) return null;
-    return result as unknown as Entity;
-  }
-
-  listByCond = async(cond: CondType, paging: pagingDTO): Promise<Array<Entity>> => {
-    // const { page, limit } = paging;
-
-    // return this.sequalize.models[this.modelName].findAll({
-    //   where: cond as any,
-    //   order: [["id", "DESC"]],
-    //   limit,
-    //   offset: (page - 1) * limit,
-    // }).then((rows) => rows.map((item) => item.get({ plain: true }) as Entity));
-    const { page, limit } = paging;
-
-    const { rows, count } = await this.sequalize.models[this.modelName].findAndCountAll({
-      where: cond as any,
-      order: [["id", "DESC"]],
-      limit,
-      offset: (page - 1) * limit,
-    });
-
-    paging.total = count;
-    return rows.map((item) => item.get({ plain: true }) as Entity);
+    return this.queryRepo.byCond(cond);
   }
 }

@@ -1,19 +1,17 @@
 import { Op } from "sequelize";
-import { IQueryHandler } from "../../../share/interface";
-import { pagingDTO, paginSchema } from "../../../share/model/paging";
-import { IBranchRepository, IGetListBranch } from "../interface";
+import { IBaseGetByCond, IQueryHandler } from "../../../share/interface";
+import { IBranchRepository } from "../interface";
 import { BranchStatus, BranchType } from "../model";
-import { BranchCondSchema } from "../model/dto";
+import { BranchCondSchema, BranchCondType } from "../model/dto";
+import { ErrBranchDeleted, ErrBranchNotfound } from "../model/error";
 
 
-export class GetListBranch implements IQueryHandler<IGetListBranch, { data: Array<BranchType>; paging: pagingDTO }> {
+export class GetByCondBranchService implements IQueryHandler<IBaseGetByCond<BranchCondType>, BranchType> {
   constructor(private readonly _repository: IBranchRepository) {}
 
-  query = async (command: IGetListBranch): Promise<{ data: Array<BranchType>; paging: pagingDTO }> => {
-    const paging = paginSchema.parse(command.query);
+  query = async (command: IBaseGetByCond<BranchCondType>): Promise<BranchType> => {
     const cond = BranchCondSchema.parse(command.query);
-
-    const whereCondition: any = {
+    const whereCondition: BranchCondType = {
       ...(cond.id && { id: cond.id }),
       ...(cond.name && { name: { [Op.like]: `%${cond.name}%` } }),
       ...(cond.description && {
@@ -28,10 +26,15 @@ export class GetListBranch implements IQueryHandler<IGetListBranch, { data: Arra
       ...(cond.updatedAt && { updatedAt: { [Op.lte]: cond.updatedAt } }),
     };
 
-    return {
-      data: await this._repository.list(whereCondition, paging),
-      paging: paging,
-    };
+    const branch = await this._repository.byCond(whereCondition);
+    if (!branch) {
+        throw ErrBranchNotfound
+    }
+
+    if(branch.status === BranchStatus.Deleted) {
+        throw ErrBranchDeleted
+    }
+
+    return branch
   };
-    
 }

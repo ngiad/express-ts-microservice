@@ -1,15 +1,15 @@
 import { v7 } from "uuid";
-import { IBranchRepository, ICreateBranchService } from "../interface";
+import { IBranchRepository } from "../interface";
 import { BranchStatus, BranchType } from "../model";
-import { BranchCreateSchema } from "../model/dto";
+import { BranchCreateSchema, BranchCreateType } from "../model/dto";
 import { ErrBranchNameDublicate, ErrBranchValueValidate } from "../model/error";
-import { ICommandHandler } from "../../../share/interface";
+import { IBaseCreateService, ICommandHandler } from "../../../share/interface";
 
 
-export class CreateBranchService implements ICommandHandler<ICreateBranchService, BranchType> {
+export class CreateBranchService implements ICommandHandler<IBaseCreateService<BranchCreateType>, BranchType> {
     constructor(private readonly _repository: IBranchRepository) {}
 
-    execute = async(command: ICreateBranchService): Promise<BranchType> => {
+    execute = async(command: IBaseCreateService<BranchCreateType>): Promise<BranchType> => {
         const validateBranchCreate = BranchCreateSchema.safeParse(command.data);
 
         if (validateBranchCreate.error) {

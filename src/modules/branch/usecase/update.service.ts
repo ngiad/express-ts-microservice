@@ -1,7 +1,7 @@
-import { ICommandHandler } from "../../../share/interface";
-import { IBranchRepository, IUpdateBranchService } from "../interface";
+import { IBaseUpdateService, ICommandHandler } from "../../../share/interface";
+import { IBranchRepository } from "../interface";
 import { BranchStatus, BranchType } from "../model";
-import { BranchUpdateSchema } from "../model/dto";
+import { BranchUpdateSchema, BranchUpdateType } from "../model/dto";
 import {
   ErrBranchDeleted,
   ErrBranchIdInvalid,
@@ -10,11 +10,11 @@ import {
 } from "../model/error";
 
 export class BranchUpdateService
-  implements ICommandHandler<IUpdateBranchService, BranchType>
+  implements ICommandHandler<IBaseUpdateService<BranchUpdateType>, BranchType>
 {
   constructor(private readonly _repository: IBranchRepository) {}
 
-  execute = async (command: IUpdateBranchService): Promise<BranchType> => {
+  execute = async (command: IBaseUpdateService<BranchUpdateType>): Promise<BranchType> => {
     const branchUpdateValidate = BranchUpdateSchema.safeParse(command.data);
     if (!branchUpdateValidate.success) {
       throw ErrBranchValueValidate;

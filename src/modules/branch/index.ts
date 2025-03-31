@@ -1,20 +1,21 @@
 import { Router } from "express"
 import { Sequelize } from "sequelize"
 import { init, modelBranchName } from "./repository/dto"
-import { BranchRepository } from "./repository/repo"
-import { BranchHttpService } from "./controller/transport/http-service"
-import { CreateBranchService } from "./service/create.service"
-import { BranchDetailService } from "./service/detail.service"
-import { BranchUpdateService } from "./service/update.service"
-import { GetListBranch } from "./service/list.service"
-import { BranchDeleteService } from "./service/delete.service"
-import { GetByCondBranchService } from "./service/bycond.service"
-
-
+import { BranchCommandRepository, BranchQueryRepository, BranchRepository } from "./repository/repo"
+import { BranchHttpService } from "./Infrastructure/transport/http-service"
+import { CreateBranchService } from "./usecase/create.service"
+import { BranchDetailService } from "./usecase/detail.service"
+import { BranchUpdateService } from "./usecase/update.service"
+import { GetListBranch } from "./usecase/list.service"
+import { BranchDeleteService } from "./usecase/delete.service"
+import { GetByCondBranchService } from "./usecase/bycond.service"
 
 export const setupBranchModule = (sequelize : Sequelize) => {
     init(sequelize)
-    const repository = new BranchRepository(sequelize,modelBranchName)
+    const branchQueryRepo = new BranchQueryRepository(sequelize,modelBranchName)
+    const branchCommandRepo = new BranchCommandRepository(sequelize,modelBranchName)
+    
+    const repository = new BranchRepository(branchQueryRepo,branchCommandRepo)
     // command query pattenr
     // command
     const createHandler = new CreateBranchService(repository)

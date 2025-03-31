@@ -1,13 +1,13 @@
-import { IQueryHandler } from "../../../share/interface";
-import { IBranchRepository, IGetDetailBranch } from "../interface";
+import { IBaseGetDetail, IQueryHandler } from "../../../share/interface";
+import { IBranchRepository } from "../interface";
 import { BranchType } from "../model";
 import { ErrBranchDeleted, ErrBranchIdInvalid, ErrBranchNotfound } from "../model/error";
 
 
-export class BranchDetailService implements IQueryHandler<IGetDetailBranch,BranchType>{
+export class BranchDetailService implements IQueryHandler<IBaseGetDetail,BranchType>{
         constructor(private readonly _repository: IBranchRepository) {}
 
-        query = async(command: IGetDetailBranch): Promise<BranchType> => {
+        query = async(command: IBaseGetDetail): Promise<BranchType> => {
             if (!command.id) {
                 throw ErrBranchIdInvalid;
               }

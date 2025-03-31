@@ -1,12 +1,12 @@
-import { ICommandHandler } from "../../../share/interface";
-import { IBranchRepository, IDeleteBranchService } from "../interface";
+import { IBaseDeleteService, ICommandHandler } from "../../../share/interface";
+import { IBranchRepository } from "../interface";
 import { ErrBranchDeleted, ErrBranchIdNotFound } from "../model/error";
 
 
-export class BranchDeleteService implements ICommandHandler<IDeleteBranchService, boolean> {    
+export class BranchDeleteService implements ICommandHandler<IBaseDeleteService, boolean> {    
   constructor(private readonly _repository: IBranchRepository) {}
 
-  execute = async (command: IDeleteBranchService): Promise<boolean> => {
+  execute = async (command: IBaseDeleteService): Promise<boolean> => {
     const branch = await this._repository.detail(command.id);
     if (!branch) {
       throw ErrBranchIdNotFound

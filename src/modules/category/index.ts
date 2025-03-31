@@ -1,9 +1,9 @@
 import { Router } from "express"
-import { init, modelName } from "./controller/repository/dto"
+import { init, modelName } from "./Infrastructure/repository/dto"
 import { Sequelize } from "sequelize"
-import { CategoryHttpService } from "./controller/transport/http-service"
-import { CategoryService } from "./service"
-import { CategoryRepository } from "./controller/repository/repo"
+import { CategoryHttpService } from "./Infrastructure/transport/http-service"
+import { CategoryService } from "./usecase"
+import { CategoryRepository } from "./Infrastructure/repository/repo"
 
 
 export const setupCategoryModule = (sequelize : Sequelize) => {
