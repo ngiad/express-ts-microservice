@@ -34,7 +34,7 @@ export const setupBranchModule = (sequelize : Sequelize) => {
 
     router.post("/branches",controller.createAPI)
     router.get("/branches",controller.listAPI)
-    router.get("/branches/by",controller.byCond)
+    router.get("/branches/by",controller.byCondAPI)
     router.get("/branches/:id",controller.detailAPI)
     router.patch("/branches/:id",controller.updateAPI)
     router.delete("/branches/:id",controller.deleteAPI)

@@ -1,0 +1,9 @@
+export const ErrProductName = 'Product name is required';
+export const ErrProductValueValidate = 'Product value is not valid';
+export const ErrProductNotFound = 'Product not found';
+export const ErrProductNameExist = 'Product name already exists';
+export const ErrProductId = 'Product id is required';
+export const ErrProductIdNotFound = 'Product id not found';
+export const ErrProductIdNotValid = 'Product id is not valid';
+export const ErrProductUpdate = 'Product update failed';
+export const ErrProductDeleted = 'Product is deleted';

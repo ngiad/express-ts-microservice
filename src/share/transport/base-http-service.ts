@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { IBaseCreateService, IBaseDeleteService, IBaseGetByCond, IBaseGetDetail, IBaseGetList, IBaseUpdateService, ICommandHandler, IQueryHandler } from "../interface";
+import { IBaseCreateService, IBaseDeleteService, IBaseGetByCond, IBaseGetDetail, IBaseGetList, IBaseHttpService, IBaseUpdateService, ICommandHandler, IQueryHandler } from "../interface";
 import { pagingDTO } from "../model/paging";
 import {
   ResponseSuccess,
@@ -10,7 +10,7 @@ import {
   ResponseSuccessUpdate,
 } from "../response/response.success";
 
-export abstract class BaseHttpService<Entity, CondType, CreateDTO, UpdateDTO> {
+export abstract class BaseHttpService<Entity, CondType, CreateDTO, UpdateDTO> implements IBaseHttpService<Entity, CondType, CreateDTO, UpdateDTO> {
   constructor(
     private readonly createHandler: ICommandHandler<IBaseCreateService<CreateDTO>,Entity>,
     private readonly detailQuery: IQueryHandler<IBaseGetDetail, Entity>,
@@ -55,7 +55,7 @@ export abstract class BaseHttpService<Entity, CondType, CreateDTO, UpdateDTO> {
     ).send(res);
   };
 
-  byCond = async (req: Request, res: Response) => {
+  byCondAPI = async (req: Request, res: Response) => {
     new ResponseSuccess<Entity>(
       await this.bycondQuery.query({
         query: req.query as unknown as CondType,

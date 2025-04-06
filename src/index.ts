@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { setupCategoryModule } from "./modules/category";
 import { sequelize } from "./share/component/sequelize";
 import { setupBranchModule } from "./modules/branch";
+import { setupProductModule } from "./modules/product";
 
 dotenv.config();
 
@@ -17,8 +18,12 @@ dotenv.config();
     const port = process.env.PORT || 3321;
 
     app.use(express.json());
+    app.get("/", (req: Request, res: Response) => {
+      res.send("Hello World");
+    })
     app.use("/v1/api", setupCategoryModule(sequelize));
     app.use("/v1/api", setupBranchModule(sequelize));
+    app.use("/v1/api", setupProductModule(sequelize));
     app.listen(port, () => {
       console.log(`server is running on : http://localhost:${port}`);
     });
