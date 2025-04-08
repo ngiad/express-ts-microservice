@@ -57,7 +57,11 @@ export const setupProductModule = (sequelize: Sequelize) => {
   const updateHandler = new UpdateProductService(repository);
   const deleteHandler = new DeleteProductService(repository);
   const detailQuery = new ProductDetailService(repository);
-  const listQuery = new ListProductService(repository);
+  const listQuery = new ListProductService(
+    repository,
+    proxyProductBranchRepo,
+    productCategoryRepo
+  );
   const byCondQuery = new GetProductByCondService(repository);
 
   const controller = new ProductHttpService(

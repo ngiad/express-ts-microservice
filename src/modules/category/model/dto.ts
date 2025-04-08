@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CategoryStatus } from ".";
+import { BaseCondSchema } from "../../../share/model/base-cond";
 
 export const CategoryCreateSchema = z.object({
   name: z.string().min(2, "name must be at least 2 characters"),
@@ -20,10 +21,21 @@ export const CategoryUpdateSchema = z.object({
 
 export type CategoryUpdateType = z.infer<typeof CategoryUpdateSchema>;
 
-export const CategoryCondSchema = z.object({
-  name: z.string().min(2, "name must be at least 2 characters").optional(),
-  parentId: z.string().optional(),
-  status: z.nativeEnum(CategoryStatus).optional(),
-});
+
+
+const stringOrRecord = z.union([z.string(), z.record(z.any()) as any]);
+const uuidOrRecord = z.union([z.string().uuid(), z.record(z.any()) as any]);
+const statusOrRecord = z.union([z.nativeEnum(CategoryStatus), z.record(z.any()) as any]);
+
+function asArrayOrSingle<T extends z.ZodTypeAny>(schema: T) {
+  return z.union([schema, z.array(schema)]);
+}
+export const CategoryCondSchema = BaseCondSchema.merge(
+  z.object({
+    name: asArrayOrSingle(stringOrRecord).optional(),
+    parentId: asArrayOrSingle(uuidOrRecord).optional(),
+    status: asArrayOrSingle(statusOrRecord).optional(),
+  })
+);
 
 export type CategoryCondType = z.infer<typeof CategoryCondSchema>;

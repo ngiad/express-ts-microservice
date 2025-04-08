@@ -43,8 +43,10 @@ export interface IProductCommandRepository
   
 export interface IPRCProductBranchQueryRepository {
   getBranchById: (id: string) => Promise<ProductBranchType | null>;
+  getBranchByIds: (ids: string[]) => Promise<ProductBranchType[]>;
 } 
 
 export interface IRPCCategoryQueryRepository {
   getCategoryById: (id: string) => Promise<ProductCategoryType | null>;
+  getCategoryByIds: (ids: string[]) => Promise<ProductCategoryType[]>;
 } 
