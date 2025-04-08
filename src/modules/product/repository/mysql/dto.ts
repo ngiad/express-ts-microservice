@@ -147,6 +147,10 @@ export const init = (sequelize: Sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
+      quantity : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      }
     },
     {
       sequelize,

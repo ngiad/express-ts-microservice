@@ -8,6 +8,8 @@ import {
 } from "../../model/dto";
 import { Op } from "sequelize";
 import { ICategoryRepository } from "../../interface";
+import { RPCBaseRepository } from "../../../../share/repository/base-rpc-sequelize";
+import { IRPCBaseQueryRepository } from "../../../../share/interface";
 
 export class CategoryRepository implements ICategoryRepository {
   constructor(
@@ -68,14 +70,13 @@ export class CategoryRepository implements ICategoryRepository {
   };
 
   update = async (id: string, data: CategoryUpdateType): Promise<any> => {
-    await this.sequalize.models[this.modelName].update(
-      data,
-      {
-        where: { id },
-      }
-    );
+    await this.sequalize.models[this.modelName].update(data, {
+      where: { id },
+    });
 
-    const CategoryRecord = await this.sequalize.models[this.modelName].findByPk(id);
+    const CategoryRecord = await this.sequalize.models[this.modelName].findByPk(
+      id
+    );
     return CategorySchema.parse(CategoryRecord);
   };
 
@@ -99,4 +100,13 @@ export class CategoryRepository implements ICategoryRepository {
     });
     return result as unknown as CategoryType | null;
   };
+}
+
+export class RPCCategoryRepository
+  extends RPCBaseRepository<CategoryType, CategoryCondType>
+  implements IRPCBaseQueryRepository<CategoryType, CategoryCondType>
+{
+  constructor(sequelize: Sequelize, modelName: string) {
+    super(sequelize, modelName);
+  }
 }

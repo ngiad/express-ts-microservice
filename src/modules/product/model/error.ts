@@ -7,3 +7,7 @@ export const ErrProductIdNotFound = 'Product id not found';
 export const ErrProductIdNotValid = 'Product id is not valid';
 export const ErrProductUpdate = 'Product update failed';
 export const ErrProductDeleted = 'Product is deleted';
+export const ErrProductBranchId = 'Product branch id is required';
+export const ErrProductCategoryId = 'Product category id is required';
+export const ErrProductBranchIdNotFound = 'Product branch id not found';
+export const ErrProductCategoryIdNotFound = 'Product category id not found';

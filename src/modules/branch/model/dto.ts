@@ -24,16 +24,27 @@ export const BranchUpdateSchema = z.object({
 
 export type BranchUpdateType = z.infer<typeof BranchUpdateSchema>;
 
+
+const stringOrRecord = z.union([z.string(), z.record(z.any()) as any]);
+const uuidOrRecord = z.union([z.string().uuid(), z.record(z.any()) as any]);
+const nullableStringOrRecord = z.union([z.string().nullable(), z.record(z.any()) as any]);
+const statusOrRecord = z.union([z.nativeEnum(BranchStatus), z.record(z.any()) as any]);
+const dateOrRecord = z.union([z.coerce.date(), z.record(z.any()) as any]);
+
+function asArrayOrSingle<T extends z.ZodTypeAny>(schema: T) {
+  return z.union([schema, z.array(schema)]);
+}
+
 export const BranchCondSchema = BaseCondSchema.merge(
   z.object({
-    id: z.union([z.string().uuid(), z.record(z.any()) as any]).optional(),
-    name: z.union([z.string(), z.record(z.any()) as any]).optional(),
-    description: z.union([z.string().nullable(), z.record(z.any()) as any]).optional(),
-    location: z.union([z.string().nullable(), z.record(z.any()) as any]).optional(),
-    tagLine: z.union([z.string().nullable(), z.record(z.any()) as any]).optional(),
-    status: z.union([z.nativeEnum(BranchStatus), z.record(z.any()) as any]).optional(),
-    createdAt: z.coerce.date().optional(),
-    updatedAt: z.coerce.date().optional(),
+    id: asArrayOrSingle(uuidOrRecord).optional(),
+    name: asArrayOrSingle(stringOrRecord).optional(),
+    description: asArrayOrSingle(nullableStringOrRecord).optional(),
+    location: asArrayOrSingle(nullableStringOrRecord).optional(),
+    tagLine: asArrayOrSingle(nullableStringOrRecord).optional(),
+    status: asArrayOrSingle(statusOrRecord).optional(),
+    createdAt: asArrayOrSingle(dateOrRecord).optional(),
+    updatedAt: asArrayOrSingle(dateOrRecord).optional(),
   })
 );
 

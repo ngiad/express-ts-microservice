@@ -5,7 +5,7 @@ import {
   IRepository,
   IUseCase,
 } from "../../../share/interface";
-import { ProductType } from "../model";
+import { ProductBranchType, ProductCategoryType, ProductType } from "../model";
 import {
   ProductCondType,
   ProductCreateType,
@@ -20,7 +20,14 @@ export interface IProductUseCase
     ProductType
   > {}
 
-export interface IProductHttpService extends IBaseHttpService<ProductType,ProductCondType,ProductCreateType,ProductUpdateType> {}
+export interface IProductHttpService
+  extends IBaseHttpService<
+    ProductType,
+    ProductCondType,
+    ProductCreateType,
+    ProductUpdateType
+  > {
+  }
 
 export interface IProductRepository
   extends IRepository<ProductType, ProductCondType, ProductUpdateType> {}
@@ -30,3 +37,14 @@ export interface IProductQueryRepository
 
 export interface IProductCommandRepository
   extends ICommandRepository<ProductType, ProductCondType> {}
+
+
+
+  
+export interface IPRCProductBranchQueryRepository {
+  getBranchById: (id: string) => Promise<ProductBranchType | null>;
+} 
+
+export interface IRPCCategoryQueryRepository {
+  getCategoryById: (id: string) => Promise<ProductCategoryType | null>;
+} 

@@ -12,15 +12,15 @@ import {
 
 export abstract class BaseHttpService<Entity, CondType, CreateDTO, UpdateDTO> implements IBaseHttpService<Entity, CondType, CreateDTO, UpdateDTO> {
   constructor(
-    private readonly createHandler: ICommandHandler<IBaseCreateService<CreateDTO>,Entity>,
-    private readonly detailQuery: IQueryHandler<IBaseGetDetail, Entity>,
-    private readonly updateHandler: ICommandHandler<IBaseUpdateService<UpdateDTO>, Entity>,
-    private readonly listQuery: IQueryHandler<
+    protected readonly createHandler: ICommandHandler<IBaseCreateService<CreateDTO>,Entity>,
+    protected readonly detailQuery: IQueryHandler<IBaseGetDetail, Entity>,
+    protected readonly updateHandler: ICommandHandler<IBaseUpdateService<UpdateDTO>, Entity>,
+    protected readonly listQuery: IQueryHandler<
       IBaseGetList<CondType, pagingDTO>,
       { data: Array<Entity>; paging: pagingDTO }
     >,
-    private readonly deleteHandler: ICommandHandler<IBaseDeleteService, boolean>,
-    private readonly bycondQuery: IQueryHandler<IBaseGetByCond<CondType>, Entity>
+    protected readonly deleteHandler: ICommandHandler<IBaseDeleteService, boolean>,
+    protected readonly bycondQuery: IQueryHandler<IBaseGetByCond<CondType>, Entity>
   ) {}
 
   createAPI = async (req: Request, res: Response) => {

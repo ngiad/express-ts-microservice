@@ -16,11 +16,10 @@ export const ProductCreateSchema = z.object({
   categoryId: z.string().uuid().optional(),
   price: z.number().optional(),
   discount: z.number().optional(),
+  quantity: z.number().optional(),
 });
 
 export type ProductCreateType = z.infer<typeof ProductCreateSchema>;
-
-
 
 
 export const ProductUpdateSchema = z.object({
@@ -46,6 +45,7 @@ export const ProductUpdateSchema = z.object({
   isRecommended: z.boolean().optional(),
   isPopular: z.boolean().optional(),
   isLimitedEdition: z.boolean().optional(),
+  quantity: z.number().optional(),
 });
 export type ProductUpdateType = z.infer<typeof ProductUpdateSchema>;
 

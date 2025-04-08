@@ -1,7 +1,8 @@
+import { IRPCBaseQueryRepository, IRPCBaseService } from "../../../share/interface";
 import { pagingDTO } from "../../../share/model/paging";
 import { BranchType } from "../model";
 import { BranchCondType, BranchCreateType, BranchUpdateType } from "../model/dto";
-
+import { Request, Response } from "express";
 
 export interface IBranchService {
     create(data : BranchCreateType) : Promise<BranchType>;
@@ -24,6 +25,9 @@ export interface IBranchRepository {
 }
 
 
+export interface IRPCBranchService extends IRPCBaseService{}
+
+export interface IRPCBranchQueryRepository extends IRPCBaseQueryRepository<BranchType, BranchCondType> {}
 
 // command query pattern
 

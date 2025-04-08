@@ -10,8 +10,8 @@ export abstract class BaseRepoSequelize<
   UpdateType extends {[key: string]: any}
 > implements IRepository<Entity, CondType, UpdateType> {
   constructor(
-    private readonly queryRepo :IQueryRepository<Entity, CondType>,
-    private readonly commandRepo: ICommandRepository<Entity, UpdateType>,
+    protected readonly queryRepo :IQueryRepository<Entity, CondType>,
+    protected readonly commandRepo: ICommandRepository<Entity, UpdateType>,
   ) {}
 
   detail = async (id: string): Promise<Entity | null> => {

@@ -10,8 +10,8 @@ export abstract class BaseQueryRepository<
   protected model: ModelStatic<Model<any, any>>;
 
   constructor(
-    private readonly sequelize: Sequelize,
-    private readonly modelName: string
+    protected readonly sequelize: Sequelize,
+    protected readonly modelName: string
   ) {
     this.model = this.sequelize.models[this.modelName];
     if (!this.model) {

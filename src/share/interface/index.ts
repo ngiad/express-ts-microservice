@@ -71,3 +71,15 @@ export interface IBaseGetByCond<CondType>{
 export interface IQueryHandler<Query, Result>{
   query(command : Query): Promise<Result>; 
 }
+
+export interface IRPCBaseService {
+    getByIdRPC(req: Request, res: Response): void;
+    getbylistRPC(req: Request, res: Response): void;
+    getByCondRPC(req: Request, res: Response): void;
+  }
+
+export interface IRPCBaseQueryRepository<Entity, CondType> {
+    getById(id: string): Promise<Entity | null>;
+    getByCond(cond: CondType): Promise<Entity | null>;
+    getByList(cond: CondType): Promise<Array<Entity>>;
+}

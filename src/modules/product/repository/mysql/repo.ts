@@ -1,11 +1,11 @@
 import { Sequelize } from "sequelize";
-import { ICommandRepository, IQueryRepository } from "../../../share/interface";
-import { BaseQueryRepository } from "../../../share/repository/base-query-sequelize";
-import { BaseRepoSequelize } from "../../../share/repository/base-repo-sequelize";
-import { IProductCommandRepository, IProductQueryRepository, IProductRepository } from "../interface";
-import { ProductType } from "../model";
-import { ProductCondType, ProductUpdateType } from "../model/dto";
-import { BaseCommandRepository } from "../../../share/repository/base-command-sequelize";
+import { ICommandRepository, IQueryRepository } from "../../../../share/interface";
+import { BaseQueryRepository } from "../../../../share/repository/base-query-sequelize";
+import { BaseRepoSequelize } from "../../../../share/repository/base-repo-sequelize";
+import { IProductCommandRepository, IProductQueryRepository, IProductRepository } from "../../interface";
+import { ProductType } from "../../model";
+import { ProductCondType, ProductUpdateType } from "../../model/dto";
+import { BaseCommandRepository } from "../../../../share/repository/base-command-sequelize";
 
 
 

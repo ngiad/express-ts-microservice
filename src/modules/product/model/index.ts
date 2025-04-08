@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ErrProductName } from "./error";
+import { ErrBranchNameTooShort } from "../../branch/model/error";
 
 export enum ProductStatus {
     Active = "active",
@@ -42,6 +43,7 @@ export const ProductSchema = z.object({
   ),
   branchId: z.string().uuid().optional(),
   categoryId: z.string().uuid().optional(),
+  quantity: z.number().optional(),
   price: z.number().optional(),
   discount: z.number().optional(),
   stock: z.number().optional(),
@@ -56,3 +58,28 @@ export const ProductSchema = z.object({
   isLimitedEdition: z.boolean().optional(),
 });
 export type ProductType = z.infer<typeof ProductSchema>;
+
+
+export const ProductBranchSchema = z.object({
+    id: z.string().uuid(),
+    name: z.string().min(2, ErrBranchNameTooShort),
+    image: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    location: z.string().min(2, "location must be at least 2 characters").nullable().optional(),
+    tagLine : z.string().nullable().optional()
+})
+
+export type ProductBranchType = z.infer<typeof ProductBranchSchema>;
+
+export const ProductCategorySchema = z.object({
+    id: z.string().uuid(),
+    name: z.string().min(2, ErrBranchNameTooShort),
+    image: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    position: z.number().min(0, "invalid position").default(0),
+    parentId: z.string().nullable().optional()
+})
+export type ProductCategoryType = z.infer<typeof ProductCategorySchema>;
+
+
+export type ProductFullDataType = ProductType & { branch? : ProductBranchType}  & {category? : ProductCategoryType};
