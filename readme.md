@@ -69,6 +69,7 @@ Kiến trúc này được thực hiện thông qua việc định nghĩa rõ r�
     DB_PASSWORD=your_password # !! Thay bằng mật khẩu bạn đã đặt ở bước 3
     DB_DATABASE=demo
     DB_DIALECT=mysql
+    SECRRTKEY=nghiaquadepzai
 
     # Các biến môi trường khác (nếu có)
     # JWT_SECRET=...
