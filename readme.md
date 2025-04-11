@@ -88,3 +88,8 @@ Trong file `package.json`, script chính là:
 
 * `npm start`: Khởi chạy ứng dụng ở chế độ development sử dụng `nodemon` và `ts-node`.
 * `npm test`: (Hiện tại chưa có test) - Cần được cấu hình thêm.
+
+
+kiểm tra lỗi của thư viện
+* `npm audit`
+
