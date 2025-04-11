@@ -71,6 +71,9 @@ Kiến trúc này được thực hiện thông qua việc định nghĩa rõ r�
     DB_DIALECT=mysql
     SECRRTKEY=nghiaquadepzai
 
+    RPC_PRODUCT_BRANCH=http://localhost:8080
+    RPC_PRODUCT_CATEGORY=http://localhost:8080
+
     # Các biến môi trường khác (nếu có)
     # JWT_SECRET=...
     ```
