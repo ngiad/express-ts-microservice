@@ -9,6 +9,7 @@ import {
   UserResponseType,
 } from "../dto";
 import {  IUserByCondQuery } from "../services/IUserService";
+import { userErrCheck } from "../utils";
 
 
 export class UserByCondQuery
@@ -84,9 +85,13 @@ export class UserByCondQuery
           : { [Op.lte]: cond.updatedAt },
       }),
     };
+
+    const user = await this._repository.byCond(
+      whereCondition
+    )
+
+    userErrCheck(user)
     
-    return UserResponseSchema.parse(await this._repository.byCond(
-        whereCondition
-      ))
+    return UserResponseSchema.parse(user)
   };
 }
