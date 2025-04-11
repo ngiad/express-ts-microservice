@@ -69,3 +69,246 @@ graph LR
     DrivenAdapter -- Giao tiếp --> API
 
     style Hexagon fill:#f9f,stroke:#333,stroke-width:2px
+
+
+
+
+    src/
+├── modules/
+│   └── user/
+│       ├── application/  (Use Cases/Application Services)
+│       │   ├── commands/ (Các use case thay đổi trạng thái)
+│       │   │   ├── register-user.command.ts
+│       │   │   ├── login-user.command.ts
+│       │   │   ├── refresh-token.command.ts
+│       │   │   ├── handle-oauth-callback.command.ts
+│       │   │   ├── logout-user.command.ts
+│       │   │   ├── logout-all-devices.command.ts
+│       │   │   └── logout-selected-devices.command.ts
+│       │   ├── queries/  (Các use case chỉ đọc dữ liệu)
+│       │   │   ├── get-user-profile.query.ts
+│       │   │   └── get-user-sessions.query.ts
+│       │   ├── dto/      (Data Transfer Objects cho use cases)
+│       │   │   ├── auth-tokens.dto.ts
+│       │   │   ├── user-profile.dto.ts
+│       │   │   └── user-session.dto.ts
+│       │   ├── services/ (Interfaces - Input Ports)
+│       │   │   ├── IAuthService.ts
+│       │   │   ├── IOAuthService.ts
+│       │   │   └── IUserSessionService.ts
+│       │   └── index.ts
+│       │
+│       ├── domain/       (Core Business Logic & Entities)
+│       │   ├── entities/
+│       │   │   ├── user.entity.ts
+│       │   │   └── user-session.entity.ts (Quan trọng để quản lý device/token)
+│       │   ├── repositories/ (Interfaces - Output Ports for Data)
+│       │   │   ├── IUserRepository.ts
+│       │   │   └── IUserSessionRepository.ts
+│       │   ├── services/     (Domain Services - Logic cốt lõi)
+│       │   │   ├── IPasswordService.ts
+│       │   │   └── ITokenService.ts (Interface cho việc tạo/verify token)
+│       │   └── value-objects/ (Optional: e.g., Email, PasswordHash)
+│       │
+│       └── infrastructure/ (Adapters - Implementation Details)
+│           ├── persistence/ (Data Persistence Adapter - Sequelize/MySQL)
+│           │   ├── sequelize/
+│           │   │   ├── models/
+│           │   │   │   ├── user.model.ts
+│           │   │   │   └── user-session.model.ts
+│           │   │   ├── repositories/
+│           │   │   │   ├── sequelize-user.repository.ts
+│           │   │   │   └── sequelize-user-session.repository.ts
+│           │   │   ├── migrations/
+│           │   │   └── config.ts (DB Connection details)
+│           │
+│           ├── transport/    (Input Adapters - e.g., HTTP Controllers)
+│           │   ├── http/     (Ví dụ với Express)
+│           │   │   ├── controllers/
+│           │   │   │   └── user.controller.ts
+│           │   │   ├── dto/  (DTOs cho HTTP layer)
+│           │   │   │   ├── register-request.dto.ts
+│           │   │   │   ├── login-request.dto.ts
+│           │   │   │   └── refresh-token-request.dto.ts
+│           │   │   ├── middleware/
+│           │   │   │   └── auth.middleware.ts (Kiểm tra Access Token)
+│           │   │   └── routes.ts
+│           │   └── rpc/      (Nếu cần)
+│           │
+│           ├── security/     (Security Adapters)
+│           │   ├── bcrypt.service.ts (Implement IPasswordService)
+│           │   └── jwt.service.ts    (Implement ITokenService)
+│           │
+│           ├── auth-providers/ (OAuth Adapters)
+│           │   ├── google.adapter.ts
+│           │   ├── facebook.adapter.ts
+│           │   └── IOAuthProvider.ts (Interface chung cho các provider)
+│           │
+│           └── location/     (Location Service Adapter)
+│               └── geoip.service.ts (Implement interface lấy location từ IP)
+│
+├── config/             (App-wide config)
+├── shared/             (Shared utilities, interfaces)
+└── main.ts             (App entry point)
+
+
+
+mongodb
+
+src/
+├── modules/
+│   └── user/
+│       ├── application/
+│       │   ├── commands/
+│       │   │   └── login-user.command.ts # (Sẽ được implement trong AuthService)
+│       │   ├── dto/
+│       │   │   └── auth-tokens.dto.ts
+│       │   ├── services/
+│       │   │   └── IAuthService.ts
+│       │   └── index.ts # Re-export các thành phần Application
+│       │
+│       ├── domain/
+│       │   ├── entities/
+│       │   │   ├── user.entity.ts
+│       │   │   └── user-session.entity.ts
+│       │   ├── repositories/
+│       │   │   ├── IUserRepository.ts
+│       │   │   └── IUserSessionRepository.ts
+│       │   ├── services/
+│       │   │   ├── IPasswordService.ts
+│       │   │   └── ITokenService.ts
+│       │   └── index.ts # Re-export các thành phần Domain
+│       │
+│       └── infrastructure/
+│           ├── persistence/
+│           │   └── mongoose/
+│           │       ├── schemas/
+│           │       │   ├── user.schema.ts
+│           │       │   └── user-session.schema.ts
+│           │       ├── repositories/
+│           │       │   ├── mongoose-user.repository.ts
+│           │       │   └── mongoose-user-session.repository.ts
+│           │       └── index.ts # Re-export các thành phần Persistence
+│           │
+│           ├── transport/
+│           │   └── http/
+│           │       ├── controllers/
+│           │       │   └── user.controller.ts
+│           │       ├── dto/
+│           │       │   └── login-request.dto.ts
+│           │       └── index.ts # Re-export các thành phần HTTP Transport
+│           │
+│           ├── security/
+│           │   ├── bcrypt.service.ts
+│           │   └── jwt.service.ts
+│           │   └── index.ts # Re-export các thành phần Security
+│           │
+│           └── location/
+│               ├── geoip.service.ts
+│               └── index.ts # Re-export các thành phần Location
+│           └── index.ts # Re-export các thành phần Infrastructure
+│
+├── config/
+├── shared/
+└── main.ts
+
+
+Elasticsearch
+
+├── src/
+│   ├── modules/
+│   │   └── user/
+│   │       ├── application/
+│   │       │   ├── commands/
+│   │       │   │   ├── register-user.command.ts
+│   │       │   │   ├── login-user.command.ts
+│   │       │   │   ├── refresh-token.command.ts
+│   │       │   │   ├── handle-oauth-callback.command.ts
+│   │       │   │   ├── logout-user.command.ts
+│   │       │   │   ├── logout-all-devices.command.ts
+│   │       │   │   └── logout-selected-devices.command.ts
+│   │       │   ├── queries/
+│   │       │   │   ├── get-user-profile.query.ts
+│   │       │   │   ├── get-user-sessions.query.ts
+│   │       │   │   └── search-users.query.ts          // Thêm use case tìm kiếm
+│   │       │   ├── dto/
+│   │       │   │   ├── auth-tokens.dto.ts
+│   │       │   │   ├── user-profile.dto.ts
+│   │       │   │   ├── user-session.dto.ts
+│   │       │   │   └── user-search-result.dto.ts      // DTO cho kết quả tìm kiếm
+│   │       │   ├── services/
+│   │       │   │   ├── IAuthService.ts
+│   │       │   │   ├── IOAuthService.ts
+│   │       │   │   ├── IUserSessionService.ts
+│   │       │   │   └── IUserSearchService.ts        // Interface cho dịch vụ tìm kiếm
+│   │       │   └── index.ts
+│   │       │
+│   │       ├── domain/
+│   │       │   ├── entities/
+│   │       │   │   ├── user.entity.ts
+│   │       │   │   └── user-session.entity.ts
+│   │       │   ├── repositories/
+│   │       │   │   ├── IUserRepository.ts
+│   │       │   │   └── IUserSessionRepository.ts
+│   │       │   ├── services/
+│   │       │   │   ├── IPasswordService.ts
+│   │       │   │   └── ITokenService.ts
+│   │       │   └── value-objects/
+│   │       │
+│   │       └── infrastructure/
+│   │           ├── persistence/
+│   │           │   ├── sequelize/
+│   │           │   │   ├── models/
+│   │           │   │   │   ├── user.model.ts
+│   │           │   │   │   └── user-session.model.ts
+│   │           │   │   ├── repositories/
+│   │           │   │   │   ├── sequelize-user.repository.ts
+│   │           │   │   │   └── sequelize-user-session.repository.ts
+│   │           │   │   ├── migrations/
+│   │           │   │   └── config.ts
+│   │           │
+│   │           ├── transport/
+│   │           │   ├── http/
+│   │           │   │   ├── controllers/
+│   │           │   │   │   └── user.controller.ts
+│   │           │   │   ├── dto/
+│   │           │   │   │   ├── register-request.dto.ts
+│   │           │   │   │   ├── login-request.dto.ts
+│   │           │   │   │   └── refresh-token-request.dto.ts
+│   │           │   │   ├── middleware/
+│   │           │   │   │   └── auth.middleware.ts
+│   │           │   │   └── routes.ts
+│   │           │   └── rpc/
+│   │           │
+│   │           ├── security/
+│   │           │   ├── bcrypt.service.ts
+│   │           │   └── jwt.service.ts
+│   │           │
+│   │           ├── auth-providers/
+│   │           │   ├── google.adapter.ts
+│   │           │   ├── facebook.adapter.ts
+│   │           │   └── IOAuthProvider.ts
+│   │           │
+│   │           ├── location/
+│   │           │   └── geoip.service.ts
+│   │           │
+│   │           └── search/                      // Thư mục cho search adapter
+│   │               └── elasticsearch-user-search.service.ts // Adapter Elasticsearch
+│   │
+│   └── index.ts                                 // (Nếu có các exports chung cho modules)
+│
+├── config/
+│   └── elasticsearch.config.ts                // Cấu hình Elasticsearch
+├── shared/
+│   ├── interfaces/
+│   │   └── ...
+│   ├── dtos/
+│   │   └── ...
+│   ├── services/
+│   │   └── ...
+│   └── utils/
+│       └── ...
+├── main.ts
+├── package.json
+├── package-lock.json
+└── README.md

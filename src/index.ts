@@ -4,6 +4,7 @@ import { setupCategoryModule } from "./modules/category";
 import { sequelize } from "./share/component/sequelize";
 import { setupBranchModule } from "./modules/branch";
 import { setupProductModule } from "./modules/product";
+import { setupUserModule } from "./modules/user";
 
 dotenv.config();
 
@@ -24,6 +25,9 @@ dotenv.config();
     app.use("/v1/api", setupCategoryModule(sequelize));
     app.use("/v1/api", setupBranchModule(sequelize));
     app.use("/v1/api", setupProductModule(sequelize));
+    app.use("/v1/api", setupUserModule(sequelize));
+
+
     app.listen(port, () => {
       console.log(`server is running on : http://localhost:${port}`);
     });

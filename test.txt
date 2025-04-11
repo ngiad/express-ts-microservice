@@ -1,0 +1,1652 @@
+// src/modules/user/domain/entities/user.entity.ts
+export enum UserRole {
+    USER = 'user',
+    ADMIN = 'admin'
+  }
+  
+  export class User {
+    id: string;
+    email: string;
+    passwordHash: string;
+    firstName?: string;
+    lastName?: string;
+    role: UserRole;
+    isEmailVerified: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  
+    constructor(params: {
+      id: string;
+      email: string;
+      passwordHash: string;
+      firstName?: string;
+      lastName?: string;
+      role?: UserRole;
+      isEmailVerified?: boolean;
+      createdAt?: Date;
+      updatedAt?: Date;
+    }) {
+      this.id = params.id;
+      this.email = params.email;
+      this.passwordHash = params.passwordHash;
+      this.firstName = params.firstName;
+      this.lastName = params.lastName;
+      this.role = params.role || UserRole.USER;
+      this.isEmailVerified = params.isEmailVerified || false;
+      this.createdAt = params.createdAt || new Date();
+      this.updatedAt = params.updatedAt || new Date();
+    }
+  
+    // Phương thức kiểm tra xem user có quyền admin hay không
+    isAdmin(): boolean {
+      return this.role === UserRole.USER;
+    }
+  
+    // Phương thức cập nhật thông tin cá nhân
+    updateProfile(firstName: string, lastName: string): void {
+      this.firstName = firstName;
+      this.lastName = lastName;
+      this.updatedAt = new Date();
+    }
+  
+    // Phương thức đánh dấu email đã được xác thực
+    verifyEmail(): void {
+      this.isEmailVerified = true;
+      this.updatedAt = new Date();
+    }
+  }
+  
+  // src/modules/user/domain/entities/user-session.entity.ts
+  export class UserSession {
+    id: string;
+    userId: string;
+    deviceInfo: string;
+    ipAddress: string;
+    location?: string;
+    lastActiveAt: Date;
+    createdAt: Date;
+    expiresAt: Date;
+    isActive: boolean;
+  
+    constructor(params: {
+      id: string;
+      userId: string;
+      deviceInfo: string;
+      ipAddress: string;
+      location?: string;
+      lastActiveAt?: Date;
+      createdAt?: Date;
+      expiresAt: Date;
+      isActive?: boolean;
+    }) {
+      this.id = params.id;
+      this.userId = params.userId;
+      this.deviceInfo = params.deviceInfo;
+      this.ipAddress = params.ipAddress;
+      this.location = params.location;
+      this.lastActiveAt = params.lastActiveAt || new Date();
+      this.createdAt = params.createdAt || new Date();
+      this.expiresAt = params.expiresAt;
+      this.isActive = params.isActive ?? true;
+    }
+  
+    // Phương thức cập nhật thời gian hoạt động cuối
+    updateLastActive(): void {
+      this.lastActiveAt = new Date();
+    }
+  
+    // Phương thức kiểm tra session có hết hạn chưa
+    isExpired(): boolean {
+      return new Date() > this.expiresAt;
+    }
+  
+    // Phương thức vô hiệu hóa session (đăng xuất)
+    deactivate(): void {
+      this.isActive = false;
+    }
+  }
+  
+  // src/modules/user/domain/repositories/IUserRepository.ts
+  import { User } from '../entities/user.entity';
+  
+  export interface IUserRepository {
+    findById(id: string): Promise<User | null>;
+    findByEmail(email: string): Promise<User | null>;
+    create(user: User): Promise<User>;
+    update(user: User): Promise<User>;
+    delete(id: string): Promise<boolean>;
+  }
+  
+  // src/modules/user/domain/repositories/IUserSessionRepository.ts
+  import { UserSession } from '../entities/user-session.entity';
+  
+  export interface IUserSessionRepository {
+    findById(id: string): Promise<UserSession | null>;
+    findByUserId(userId: string): Promise<UserSession[]>;
+    create(session: UserSession): Promise<UserSession>;
+    update(session: UserSession): Promise<UserSession>;
+    deleteById(id: string): Promise<boolean>;
+    deleteAllByUserId(userId: string): Promise<boolean>;
+    deleteExpiredSessions(): Promise<number>; // Trả về số lượng session đã xóa
+  }
+  
+  // src/modules/user/domain/services/IPasswordService.ts
+  export interface IPasswordService {
+    hash(password: string): Promise<string>;
+    verify(password: string, hash: string): Promise<boolean>;
+  }
+  
+  // src/modules/user/domain/services/ITokenService.ts
+  export interface TokenPayload {
+    userId: string;
+    sessionId: string;
+  }
+  
+  export interface Tokens {
+    accessToken: string;
+    refreshToken: string;
+  }
+  
+  export interface ITokenService {
+    generateTokens(payload: TokenPayload): Promise<Tokens>;
+    verifyAccessToken(token: string): Promise<TokenPayload>;
+    verifyRefreshToken(token: string): Promise<TokenPayload>;
+  }
+  
+  // src/modules/user/application/dto/auth-tokens.dto.ts
+  export class AuthTokensDto {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number; // Thời gian hết hạn của access token (giây)
+  
+    constructor(accessToken: string, refreshToken: string, expiresIn: number) {
+      this.accessToken = accessToken;
+      this.refreshToken = refreshToken;
+      this.expiresIn = expiresIn;
+    }
+  }
+  
+  // src/modules/user/application/dto/user-profile.dto.ts
+  export class UserProfileDto {
+    id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    isEmailVerified: boolean;
+  
+    constructor(params: {
+      id: string,
+      email: string,
+      firstName?: string,
+      lastName?: string,
+      isEmailVerified: boolean
+    }) {
+      this.id = params.id;
+      this.email = params.email;
+      this.firstName = params.firstName;
+      this.lastName = params.lastName;
+      this.isEmailVerified = params.isEmailVerified;
+    }
+  }
+  
+  // src/modules/user/application/dto/user-session.dto.ts
+  export class UserSessionDto {
+    id: string;
+    deviceInfo: string;
+    ipAddress: string;
+    location?: string;
+    lastActiveAt: Date;
+    createdAt: Date;
+    isCurrentSession: boolean;
+  
+    constructor(params: {
+      id: string,
+      deviceInfo: string,
+      ipAddress: string,
+      location?: string,
+      lastActiveAt: Date,
+      createdAt: Date,
+      isCurrentSession: boolean
+    }) {
+      this.id = params.id;
+      this.deviceInfo = params.deviceInfo;
+      this.ipAddress = params.ipAddress;
+      this.location = params.location;
+      this.lastActiveAt = params.lastActiveAt;
+      this.createdAt = params.createdAt;
+      this.isCurrentSession = params.isCurrentSession;
+    }
+  }
+  
+  // src/modules/user/application/services/IAuthService.ts
+  import { AuthTokensDto } from '../dto/auth-tokens.dto';
+  import { UserProfileDto } from '../dto/user-profile.dto';
+  
+  export interface IAuthService {
+    registerUser(email: string, password: string, firstName?: string, lastName?: string): Promise<UserProfileDto>;
+    loginUser(email: string, password: string, deviceInfo: string, ipAddress: string): Promise<AuthTokensDto>;
+    refreshToken(refreshToken: string, deviceInfo: string, ipAddress: string): Promise<AuthTokensDto>;
+    logout(sessionId: string): Promise<boolean>;
+    logoutAllDevices(userId: string): Promise<boolean>;
+    logoutSelectedDevices(userId: string, sessionIds: string[]): Promise<boolean>;
+    validateAccessToken(token: string): Promise<UserProfileDto | null>;
+  }
+  
+  // src/modules/user/application/commands/register-user.command.ts
+  import { IUserRepository } from '../../domain/repositories/IUserRepository';
+  import { IPasswordService } from '../../domain/services/IPasswordService';
+  import { User } from '../../domain/entities/user.entity';
+  import { UserProfileDto } from '../dto/user-profile.dto';
+  import { v4 as uuidv4 } from 'uuid';
+  
+  export class RegisterUserCommand {
+    constructor(
+      private readonly userRepository: IUserRepository,
+      private readonly passwordService: IPasswordService
+    ) {}
+  
+    async execute(params: {
+      email: string;
+      password: string;
+      firstName?: string;
+      lastName?: string;
+    }): Promise<UserProfileDto> {
+      // Kiểm tra email đã tồn tại chưa
+      const existingUser = await this.userRepository.findByEmail(params.email);
+      if (existingUser) {
+        throw new Error('Email đã được sử dụng');
+      }
+  
+      // Mã hóa mật khẩu
+      const passwordHash = await this.passwordService.hash(params.password);
+  
+      // Tạo user mới
+      const user = new User({
+        id: uuidv4(),
+        email: params.email,
+        passwordHash,
+        firstName: params.firstName,
+        lastName: params.lastName,
+        isEmailVerified: false,
+      });
+  
+      // Lưu user vào database
+      const savedUser = await this.userRepository.create(user);
+  
+      // Trả về thông tin user
+      return new UserProfileDto({
+        id: savedUser.id,
+        email: savedUser.email,
+        firstName: savedUser.firstName,
+        lastName: savedUser.lastName,
+        isEmailVerified: savedUser.isEmailVerified
+      });
+    }
+  }
+  
+  // src/modules/user/application/commands/login-user.command.ts
+  import { IUserRepository } from '../../domain/repositories/IUserRepository';
+  import { IUserSessionRepository } from '../../domain/repositories/IUserSessionRepository';
+  import { IPasswordService } from '../../domain/services/IPasswordService';
+  import { ITokenService } from '../../domain/services/ITokenService';
+  import { UserSession } from '../../domain/entities/user-session.entity';
+  import { AuthTokensDto } from '../dto/auth-tokens.dto';
+  import { v4 as uuidv4 } from 'uuid';
+  
+  // Config
+  const ACCESS_TOKEN_EXPIRY = 15 * 60; // 15 phút (giây)
+  const REFRESH_TOKEN_EXPIRY = 30 * 24 * 60 * 60; // 30 ngày (giây)
+  
+  export class LoginUserCommand {
+    constructor(
+      private readonly userRepository: IUserRepository,
+      private readonly userSessionRepository: IUserSessionRepository,
+      private readonly passwordService: IPasswordService,
+      private readonly tokenService: ITokenService
+    ) {}
+  
+    async execute(params: {
+      email: string;
+      password: string;
+      deviceInfo: string;
+      ipAddress: string;
+      location?: string;
+    }): Promise<AuthTokensDto> {
+      // Tìm user theo email
+      const user = await this.userRepository.findByEmail(params.email);
+      if (!user) {
+        throw new Error('Email hoặc mật khẩu không đúng');
+      }
+  
+      // Kiểm tra mật khẩu
+      const isPasswordValid = await this.passwordService.verify(params.password, user.passwordHash);
+      if (!isPasswordValid) {
+        throw new Error('Email hoặc mật khẩu không đúng');
+      }
+  
+      // Tạo session mới
+      const sessionId = uuidv4();
+      const session = new UserSession({
+        id: sessionId,
+        userId: user.id,
+        deviceInfo: params.deviceInfo,
+        ipAddress: params.ipAddress,
+        location: params.location,
+        expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY * 1000)
+      });
+  
+      // Lưu session vào database
+      await this.userSessionRepository.create(session);
+  
+      // Tạo access token và refresh token
+      const tokens = await this.tokenService.generateTokens({
+        userId: user.id,
+        sessionId: session.id
+      });
+  
+      // Trả về tokens
+      return new AuthTokensDto(
+        tokens.accessToken,
+        tokens.refreshToken,
+        ACCESS_TOKEN_EXPIRY
+      );
+    }
+  }
+  
+  // src/modules/user/application/commands/refresh-token.command.ts
+  import { IUserSessionRepository } from '../../domain/repositories/IUserSessionRepository';
+  import { ITokenService } from '../../domain/services/ITokenService';
+  import { AuthTokensDto } from '../dto/auth-tokens.dto';
+  
+  // Config
+  const ACCESS_TOKEN_EXPIRY = 15 * 60; // 15 phút (giây)
+  
+  export class RefreshTokenCommand {
+    constructor(
+      private readonly userSessionRepository: IUserSessionRepository,
+      private readonly tokenService: ITokenService
+    ) {}
+  
+    async execute(params: {
+      refreshToken: string;
+      deviceInfo: string;
+      ipAddress: string;
+    }): Promise<AuthTokensDto> {
+      try {
+        // Xác thực refresh token
+        const payload = await this.tokenService.verifyRefreshToken(params.refreshToken);
+        
+        // Tìm session
+        const session = await this.userSessionRepository.findById(payload.sessionId);
+        
+        // Kiểm tra session có tồn tại và còn hoạt động không
+        if (!session || !session.isActive || session.isExpired()) {
+          throw new Error('Phiên đăng nhập không hợp lệ hoặc đã hết hạn');
+        }
+  
+        // Cập nhật thông tin session
+        session.updateLastActive();
+        session.deviceInfo = params.deviceInfo; // Cập nhật thông tin thiết bị nếu có thay đổi
+        session.ipAddress = params.ipAddress; // Cập nhật địa chỉ IP
+        
+        // Lưu session đã cập nhật
+        await this.userSessionRepository.update(session);
+  
+        // Tạo access token và refresh token mới
+        const tokens = await this.tokenService.generateTokens({
+          userId: session.userId,
+          sessionId: session.id
+        });
+  
+        // Trả về tokens mới
+        return new AuthTokensDto(
+          tokens.accessToken,
+          tokens.refreshToken,
+          ACCESS_TOKEN_EXPIRY
+        );
+      } catch (error) {
+        throw new Error('Refresh token không hợp lệ hoặc đã hết hạn');
+      }
+    }
+  }
+  
+  // src/modules/user/application/commands/logout-user.command.ts
+  import { IUserSessionRepository } from '../../domain/repositories/IUserSessionRepository';
+  import { ITokenService } from '../../domain/services/ITokenService';
+  
+  export class LogoutUserCommand {
+    constructor(
+      private readonly userSessionRepository: IUserSessionRepository,
+      private readonly tokenService: ITokenService
+    ) {}
+  
+    async execute(accessToken: string): Promise<boolean> {
+      try {
+        // Xác thực access token
+        const payload = await this.tokenService.verifyAccessToken(accessToken);
+        
+        // Tìm session
+        const session = await this.userSessionRepository.findById(payload.sessionId);
+        
+        // Kiểm tra session có tồn tại không
+        if (!session) {
+          return false; // Session không tồn tại
+        }
+  
+        // Vô hiệu hóa session
+        session.deactivate();
+        
+        // Cập nhật session trong database
+        await this.userSessionRepository.update(session);
+        
+        return true;
+      } catch (error) {
+        throw new Error('Token không hợp lệ');
+      }
+    }
+  }
+  
+  // src/modules/user/application/commands/logout-all-devices.command.ts
+  import { IUserSessionRepository } from '../../domain/repositories/IUserSessionRepository';
+  
+  export class LogoutAllDevicesCommand {
+    constructor(
+      private readonly userSessionRepository: IUserSessionRepository
+    ) {}
+  
+    async execute(userId: string): Promise<boolean> {
+      try {
+        // Xóa tất cả session của user
+        const result = await this.userSessionRepository.deleteAllByUserId(userId);
+        return result;
+      } catch (error) {
+        throw new Error('Không thể đăng xuất từ tất cả thiết bị');
+      }
+    }
+  }
+  
+  // src/modules/user/application/commands/logout-selected-devices.command.ts
+  import { IUserSessionRepository } from '../../domain/repositories/IUserSessionRepository';
+  
+  export class LogoutSelectedDevicesCommand {
+    constructor(
+      private readonly userSessionRepository: IUserSessionRepository
+    ) {}
+  
+    async execute(userId: string, sessionIds: string[]): Promise<boolean> {
+      try {
+        // Lấy tất cả session của user
+        const sessions = await this.userSessionRepository.findByUserId(userId);
+        
+        // Lọc ra các session thuộc danh sách cần đăng xuất và thuộc về user này
+        const validSessionIds = sessions
+          .filter(session => sessionIds.includes(session.id))
+          .map(session => session.id);
+        
+        // Xóa từng session
+        for (const sessionId of validSessionIds) {
+          await this.userSessionRepository.deleteById(sessionId);
+        }
+        
+        return true;
+      } catch (error) {
+        throw new Error('Không thể đăng xuất từ các thiết bị đã chọn');
+      }
+    }
+  }
+  
+  // src/modules/user/application/queries/get-user-profile.query.ts
+  import { IUserRepository } from '../../domain/repositories/IUserRepository';
+  import { UserProfileDto } from '../dto/user-profile.dto';
+  
+  export class GetUserProfileQuery {
+    constructor(
+      private readonly userRepository: IUserRepository
+    ) {}
+  
+    async execute(userId: string): Promise<UserProfileDto> {
+      // Tìm user theo id
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw new Error('Người dùng không tồn tại');
+      }
+  
+      // Trả về thông tin profile
+      return new UserProfileDto({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isEmailVerified: user.isEmailVerified
+      });
+    }
+  }
+  
+  // src/modules/user/application/queries/get-user-sessions.query.ts
+  import { IUserSessionRepository } from '../../domain/repositories/IUserSessionRepository';
+  import { UserSessionDto } from '../dto/user-session.dto';
+  
+  export class GetUserSessionsQuery {
+    constructor(
+      private readonly userSessionRepository: IUserSessionRepository
+    ) {}
+  
+    async execute(userId: string, currentSessionId: string): Promise<UserSessionDto[]> {
+      // Lấy tất cả session của user
+      const sessions = await this.userSessionRepository.findByUserId(userId);
+  
+      // Chuyển đổi thành DTO và đánh dấu session hiện tại
+      return sessions
+        .filter(session => session.isActive && !session.isExpired()) // Chỉ lấy các session còn hoạt động và chưa hết hạn
+        .map(session => new UserSessionDto({
+          id: session.id,
+          deviceInfo: session.deviceInfo,
+          ipAddress: session.ipAddress,
+          location: session.location,
+          lastActiveAt: session.lastActiveAt,
+          createdAt: session.createdAt,
+          isCurrentSession: session.id === currentSessionId
+        }));
+    }
+  }
+  
+  // src/modules/user/infrastructure/security/bcrypt.service.ts
+  import * as bcrypt from 'bcrypt';
+  import { IPasswordService } from '../../domain/services/IPasswordService';
+  
+  export class BcryptPasswordService implements IPasswordService {
+    private readonly saltRounds = 10;
+  
+    async hash(password: string): Promise<string> {
+      return bcrypt.hash(password, this.saltRounds);
+    }
+  
+    async verify(password: string, hash: string): Promise<boolean> {
+      return bcrypt.compare(password, hash);
+    }
+  }
+  
+  // src/modules/user/infrastructure/security/jwt.service.ts
+  import * as jwt from 'jsonwebtoken';
+  import { ITokenService, TokenPayload, Tokens } from '../../domain/services/ITokenService';
+  
+  export class JwtTokenService implements ITokenService {
+    private readonly accessTokenSecret: string;
+    private readonly refreshTokenSecret: string;
+    private readonly accessTokenExpiry: number; // seconds
+    private readonly refreshTokenExpiry: number; // seconds
+  
+    constructor() {
+      // Trong thực tế, các giá trị này sẽ được lấy từ environment variables
+      this.accessTokenSecret = process.env.ACCESS_TOKEN_SECRET || 'access-token-secret';
+      this.refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET || 'refresh-token-secret';
+      this.accessTokenExpiry = parseInt(process.env.ACCESS_TOKEN_EXPIRY || '900'); // 15 phút
+      this.refreshTokenExpiry = parseInt(process.env.REFRESH_TOKEN_EXPIRY || '2592000'); // 30 ngày
+    }
+  
+    async generateTokens(payload: TokenPayload): Promise<Tokens> {
+      const accessToken = jwt.sign(payload, this.accessTokenSecret, {
+        expiresIn: this.accessTokenExpiry
+      });
+  
+      const refreshToken = jwt.sign(payload, this.refreshTokenSecret, {
+        expiresIn: this.refreshTokenExpiry
+      });
+  
+      return {
+        accessToken,
+        refreshToken
+      };
+    }
+  
+    async verifyAccessToken(token: string): Promise<TokenPayload> {
+      try {
+        return jwt.verify(token, this.accessTokenSecret) as TokenPayload;
+      } catch (error) {
+        throw new Error('Access token không hợp lệ hoặc đã hết hạn');
+      }
+    }
+  
+    async verifyRefreshToken(token: string): Promise<TokenPayload> {
+      try {
+        return jwt.verify(token, this.refreshTokenSecret) as TokenPayload;
+      } catch (error) {
+        throw new Error('Refresh token không hợp lệ hoặc đã hết hạn');
+      }
+    }
+  }
+  
+  // src/modules/user/infrastructure/persistence/sequelize/models/user.model.ts
+  import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
+  import { UserSessionModel } from './user-session.model';
+  
+  @Table({
+    tableName: 'users',
+    timestamps: true
+  })
+  export class UserModel extends Model {
+    @Column({
+      type: DataType.UUID,
+      primaryKey: true
+    })
+    id!: string;
+  
+    @Column({
+      type: DataType.STRING,
+      allowNull: false,
+      unique: true
+    })
+    email!: string;
+  
+    @Column({
+      type: DataType.STRING,
+      allowNull: false
+    })
+    passwordHash!: string;
+  
+    @Column({
+      type: DataType.STRING,
+      allowNull: true
+    })
+    firstName?: string;
+  
+    @Column({
+      type: DataType.STRING,
+      allowNull: true
+    })
+    lastName?: string;
+  
+    @Column({
+      type: DataType.ENUM('user', 'admin'),
+      allowNull: false,
+      defaultValue: 'user'
+    })
+    role!: string;
+  
+    @Column({
+      type: DataType.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    })
+    isEmailVerified!: boolean;
+  
+    @HasMany(() => UserSessionModel)
+    sessions!: UserSessionModel[];
+  }
+  
+  // src/modules/user/infrastructure/persistence/sequelize/models/user-session.model.ts
+  import { Table, Column, Model, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
+  import { UserModel } from './user.model';
+  
+  @Table({
+    tableName: 'user_sessions',
+    timestamps: true
+  })
+  export class UserSessionModel extends Model {
+    @Column({
+      type: DataType.UUID,
+      primaryKey: true
+    })
+    id!: string;
+  
+    @ForeignKey(() => UserModel)
+    @Column({
+      type: DataType.UUID,
+      allowNull: false
+    })
+    userId!: string;
+  
+    @BelongsTo(() => UserModel)
+    user!: UserModel;
+  
+    @Column({
+      type: DataType.STRING,
+      allowNull: false
+    })
+    deviceInfo!: string;
+  
+    @Column({
+      type: DataType.STRING,
+      allowNull: false
+    })
+    ipAddress!: string;
+  
+    @Column({
+      type: DataType.STRING,
+      allowNull: true
+    })
+    location?: string;
+  
+    @Column({
+      type: DataType.DATE,
+      allowNull: false,
+      defaultValue: DataType.NOW
+    })
+    lastActiveAt!: Date;
+  
+    @Column({
+      type: DataType.DATE,
+      allowNull: false
+    })
+    expiresAt!: Date;
+  
+    @Column({
+      type: DataType.BOOLEAN,
+      allowNull: false,
+      defaultValue: true
+    })
+    isActive!: boolean;
+  }
+  
+  // src/modules/user/infrastructure/persistence/sequelize/repositories/sequelize-user.repository.ts
+  import { IUserRepository } from '../../../../domain/repositories/IUserRepository';
+  import { User, UserRole } from '../../../../domain/entities/user.entity';
+  import { UserModel } from '../models/user.model';
+  
+  export class SequelizeUserRepository implements IUserRepository {
+    async findById(id: string): Promise<User | null> {
+      const userModel = await UserModel.findByPk(id);
+      if (!userModel) {
+        return null;
+      }
+  
+      return this.mapToEntity(userModel);
+    }
+  
+    async findByEmail(email: string): Promise<User | null> {
+      const userModel = await UserModel.findOne({ where: { email } });
+      if (!userModel) {
+        return null;
+      }
+  
+      return this.mapToEntity(userModel);
+    }
+  
+    async create(user: User): Promise<User> {
+      const userModel = await UserModel.create({
+        id: user.id,
+        email: user.email,
+        passwordHash: user.passwordHash,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified
+      });
+  
+      return this.mapToEntity(userModel);
+    }
+  
+    async update(user: User): Promise<User> {
+      const userModel = await UserModel.findByPk(user.id);
+      if (!userModel) {
+        throw new Error('Người dùng không tồn tại');
+      }
+  
+      await userModel.update({
+        email: user.email,
+        passwordHash: user.passwordHash,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified
+      });
+  
+      return this.mapToEntity(userModel);
+    }
+  
+    async delete(id: string): Promise<boolean> {
+      const deletedCount = await UserModel.destroy({ where: { id } });
+      return deletedCount > 0;
+    }
+  
+    private mapToEntity(model: UserModel): User {
+      return new User({
+        id: model.id,
+        email: model.email,
+        passwordHash: model.passwordHash,
+        firstName: model.firstName,
+        lastName: model.lastName,
+        role: model.role as UserRole,
+        isEmailVerified: model.isEmailVerified,
+        createdAt: model.createdAt,
+        updatedAt: model.updatedAt
+      });
+    }
+  }
+  
+  // src/modules/user/infrastructure/persistence/sequelize/repositories/sequelize-user-session.repository.ts
+  import { IUserSessionRepository } from '../../../../domain/repositories/IUserSessionRepository';
+  import { UserSession } from '../../../../domain/entities/user-session.entity';
+  import { UserSessionModel } from '../models/user-session.model';
+  import { Op } from 'sequelize';
+  
+  export class SequelizeUserSessionRepository implements IUserSessionRepository {
+    async findById(id: string): Promise<UserSession | null> {
+      const sessionModel = await UserSessionModel.findByPk(id);
+      if (!sessionModel) {
+        return null;
+      }
+  
+      return this.mapToEntity(sessionModel);
+    }
+  
+    async findByUserId(userId: string): Promise<UserSession[]> {
+      const sessionModels = await UserSessionModel.findAll({ 
+        where: { userId },
+        order: [['lastActiveAt', 'DESC']] // Sắp xếp theo thời gian hoạt động mới nhất
+      });
+  
+      return sessionModels.map(model => this.mapToEntity(model));
+    }
+  
+    async create(session: UserSession): Promise<UserSession> {
+      const sessionModel = await UserSessionModel.create({
+        id: session.id,
+        userId: session.userId,
+        deviceInfo: session.deviceInfo,
+        ipAddress: session.ipAddress,
+        location: session.location,
+        lastActiveAt: session.lastActiveAt,
+        expiresAt: session.expiresAt,
+        isActive: session.isActive
+      });
+  
+      return this.mapToEntity(sessionModel);
+    }
+  
+    async update(session: UserSession): Promise<UserSession> {
+      const sessionModel = await UserSessionModel.findByPk(session.id);
+      if (!sessionModel) {
+        throw new Error('Phiên không tồn tại');
+      }
+  
+      await sessionModel.update({
+        deviceInfo: session.deviceInfo,
+        ipAddress: session.ipAddress,
+        location: session.location,
+        lastActiveAt: session.lastActiveAt,
+        expiresAt: session.expiresAt,
+        isActive: session.isActive
+      });
+  
+      return this.mapToEntity(sessionModel);
+    }
+  
+    async deleteById(id: string): Promise<boolean> {
+      const deletedCount = await UserSessionModel.destroy({ where: { id } });
+      return deletedCount > 0;
+    }
+  
+    async deleteAllByUserId(userId: string): Promise<boolean> {
+      const deletedCount = await UserSessionModel.destroy({ where: { userId } });
+      return deletedCount > 0;
+    }
+  
+    async deleteExpiredSessions(): Promise<number> {
+      // Xóa tất cả các session đã hết hạn
+      const deletedCount = await UserSessionModel.destroy({
+        where: {
+          [Op.or]: [
+            { expiresAt: { [Op.lt]: new Date() } },
+            { isActive: false }
+          ]
+        }
+      });
+      
+      return deletedCount;
+    }
+  
+    private mapToEntity(model: UserSessionModel): UserSession {
+      return new UserSession({
+        id: model.id,
+        userId: model.userId,
+        deviceInfo: model.deviceInfo,
+        ipAddress: model.ipAddress,
+        location: model.location,
+        lastActiveAt: model.lastActiveAt,
+        createdAt: model.createdAt,
+        expiresAt: model.expiresAt,
+        isActive: model.isActive
+      });
+    }
+  }
+  
+// src/modules/user/infrastructure/transport/http/controllers/user.controller.ts
+import { Request, Response } from 'express';
+import { RegisterUserCommand } from '../../../../application/commands/register-user.command';
+import { LoginUserCommand } from '../../../../application/commands/login-user.command';
+import { RefreshTokenCommand } from '../../../../application/commands/refresh-token.command';
+import { LogoutUserCommand } from '../../../../application/commands/logout-user.command';
+import { LogoutAllDevicesCommand } from '../../../../application/commands/logout-all-devices.command';
+import { LogoutSelectedDevicesCommand } from '../../../../application/commands/logout-selected-devices.command';
+import { GetUserProfileQuery } from '../../../../application/queries/get-user-profile.query';
+import { GetUserSessionsQuery } from '../../../../application/queries/get-user-sessions.query';
+
+export class UserController {
+  constructor(
+    private readonly registerUserCommand: RegisterUserCommand,
+    private readonly loginUserCommand: LoginUserCommand,
+    private readonly refreshTokenCommand: RefreshTokenCommand,
+    private readonly logoutUserCommand: LogoutUserCommand,
+    private readonly logoutAllDevicesCommand: LogoutAllDevicesCommand,
+    private readonly logoutSelectedDevicesCommand: LogoutSelectedDevicesCommand,
+    private readonly getUserProfileQuery: GetUserProfileQuery,
+    private readonly getUserSessionsQuery: GetUserSessionsQuery
+  ) {}
+
+  // Đăng ký người dùng mới
+  async register(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, password, firstName, lastName } = req.body;
+      
+      // Kiểm tra dữ liệu đầu vào
+      if (!email || !password) {
+        res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
+        return;
+      }
+
+      // Thực thi use case
+      const result = await this.registerUserCommand.execute({
+        email,
+        password,
+        firstName,
+        lastName
+      });
+
+      res.status(201).json(result);
+    } catch (error) {
+      console.error('Lỗi khi đăng ký tài khoản:', error);
+      res.status(400).json({ message: error.message || 'Không thể đăng ký tài khoản' });
+    }
+  }
+
+  // Đăng nhập
+  async login(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, password } = req.body;
+      
+      // Kiểm tra dữ liệu đầu vào
+      if (!email || !password) {
+        res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
+        return;
+      }
+
+      // Lấy thông tin thiết bị và IP
+      const deviceInfo = req.headers['user-agent'] || 'unknown';
+      const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+      
+      // Thực thi use case
+      const result = await this.loginUserCommand.execute({
+        email,
+        password,
+        deviceInfo,
+        ipAddress
+      });
+
+      // Đặt cookie cho refresh token (tùy chọn)
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 ngày
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      console.error('Lỗi khi đăng nhập:', error);
+      res.status(401).json({ message: error.message || 'Không thể đăng nhập' });
+    }
+  }
+
+  // Refresh token
+  async refreshToken(req: Request, res: Response): Promise<void> {
+    try {
+      // Lấy refresh token từ cookie hoặc request body
+      const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
+      
+      if (!refreshToken) {
+        res.status(400).json({ message: 'Refresh token là bắt buộc' });
+        return;
+      }
+
+      // Lấy thông tin thiết bị và IP
+      const deviceInfo = req.headers['user-agent'] || 'unknown';
+      const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+      
+      // Thực thi use case
+      const result = await this.refreshTokenCommand.execute({
+        refreshToken,
+        deviceInfo,
+        ipAddress
+      });
+
+      // Cập nhật cookie refresh token (tùy chọn)
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 ngày
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      console.error('Lỗi khi refresh token:', error);
+      res.status(401).json({ message: error.message || 'Không thể refresh token' });
+    }
+  }
+
+  // Đăng xuất
+  async logout(req: Request, res: Response): Promise<void> {
+    try {
+      // Lấy access token từ Authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.status(400).json({ message: 'Access token là bắt buộc' });
+        return;
+      }
+
+      const accessToken = authHeader.split(' ')[1];
+      
+      // Thực thi use case
+      const result = await this.logoutUserCommand.execute(accessToken);
+
+      // Xóa cookie refresh token (nếu có)
+      res.clearCookie('refreshToken');
+
+      res.status(200).json({ success: result });
+    } catch (error) {
+      console.error('Lỗi khi đăng xuất:', error);
+      res.status(401).json({ message: error.message || 'Không thể đăng xuất' });
+    }
+  }
+
+  // Đăng xuất khỏi tất cả thiết bị
+  async logoutAllDevices(req: Request, res: Response): Promise<void> {
+    try {
+      // Lấy user ID từ request (thường được đặt bởi middleware xác thực)
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        res.status(401).json({ message: 'Người dùng chưa được xác thực' });
+        return;
+      }
+      
+      // Thực thi use case
+      const result = await this.logoutAllDevicesCommand.execute(userId);
+
+      // Xóa cookie refresh token (nếu có)
+      res.clearCookie('refreshToken');
+
+      res.status(200).json({ success: result });
+    } catch (error) {
+      console.error('Lỗi khi đăng xuất khỏi tất cả thiết bị:', error);
+      res.status(400).json({ message: error.message || 'Không thể đăng xuất khỏi tất cả thiết bị' });
+    }
+  }
+
+  // Đăng xuất khỏi các thiết bị được chọn
+  async logoutSelectedDevices(req: Request, res: Response): Promise<void> {
+    try {
+      // Lấy user ID từ request (thường được đặt bởi middleware xác thực)
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        res.status(401).json({ message: 'Người dùng chưa được xác thực' });
+        return;
+      }
+
+      const { sessionIds } = req.body;
+      
+      if (!sessionIds || !Array.isArray(sessionIds) || sessionIds.length === 0) {
+        res.status(400).json({ message: 'Danh sách session ID không hợp lệ' });
+        return;
+      }
+      
+      // Thực thi use case
+      const result = await this.logoutSelectedDevicesCommand.execute(userId, sessionIds);
+
+      res.status(200).json({ success: result });
+    } catch (error) {
+      console.error('Lỗi khi đăng xuất khỏi các thiết bị được chọn:', error);
+      res.status(400).json({ message: error.message || 'Không thể đăng xuất khỏi các thiết bị được chọn' });
+    }
+  }
+
+  // Lấy thông tin profile người dùng
+  async getProfile(req: Request, res: Response): Promise<void> {
+    try {
+      // Lấy user ID từ request (thường được đặt bởi middleware xác thực)
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        res.status(401).json({ message: 'Người dùng chưa được xác thực' });
+        return;
+      }
+      
+      // Thực thi use case
+      const result = await this.getUserProfileQuery.execute(userId);
+
+      res.status(200).json(result);
+    } catch (error) {
+      console.error('Lỗi khi lấy thông tin người dùng:', error);
+      res.status(400).json({ message: error.message || 'Không thể lấy thông tin người dùng' });
+    }
+  }
+
+  // Lấy danh sách phiên đăng nhập
+  async getSessions(req: Request, res: Response): Promise<void> {
+    try {
+      // Lấy user ID và session ID từ request (thường được đặt bởi middleware xác thực)
+      const userId = req.user?.id;
+      const currentSessionId = req.user?.sessionId;
+      
+      if (!userId || !currentSessionId) {
+        res.status(401).json({ message: 'Người dùng chưa được xác thực' });
+        return;
+      }
+      
+      // Thực thi use case
+      const result = await this.getUserSessionsQuery.execute(userId, currentSessionId);
+
+      res.status(200).json(result);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách phiên đăng nhập:', error);
+      res.status(400).json({ message: error.message || 'Không thể lấy danh sách phiên đăng nhập' });
+    }
+  }
+}
+
+// src/modules/user/infrastructure/transport/http/middleware/auth.middleware.ts
+import { Request, Response, NextFunction } from 'express';
+import { ITokenService } from '../../../../domain/services/ITokenService';
+import { IUserRepository } from '../../../../domain/repositories/IUserRepository';
+import { IUserSessionRepository } from '../../../../domain/repositories/IUserSessionRepository';
+
+// Mở rộng interface Request để thêm trường user
+declare module 'express' {
+  interface Request {
+    user?: {
+      id: string;
+      sessionId: string;
+    };
+  }
+}
+
+export class AuthMiddleware {
+  constructor(
+    private readonly tokenService: ITokenService,
+    private readonly userRepository: IUserRepository,
+    private readonly userSessionRepository: IUserSessionRepository
+  ) {}
+
+  // Middleware xác thực người dùng
+  auth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      // Lấy token từ header
+      const authHeader = req.headers.authorization;
+      
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.status(401).json({ message: 'Access token không hợp lệ' });
+        return;
+      }
+
+      const accessToken = authHeader.split(' ')[1];
+      
+      // Xác thực token
+      const payload = await this.tokenService.verifyAccessToken(accessToken);
+      
+      // Kiểm tra user tồn tại
+      const user = await this.userRepository.findById(payload.userId);
+      if (!user) {
+        res.status(401).json({ message: 'Người dùng không tồn tại' });
+        return;
+      }
+
+      // Kiểm tra session tồn tại và còn hoạt động
+      const session = await this.userSessionRepository.findById(payload.sessionId);
+      if (!session || !session.isActive || session.isExpired()) {
+        res.status(401).json({ message: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn' });
+        return;
+      }
+
+      // Cập nhật thời gian hoạt động cuối của session
+      session.updateLastActive();
+      await this.userSessionRepository.update(session);
+
+      // Đặt thông tin user vào request để sử dụng trong các middleware tiếp theo
+      req.user = {
+        id: payload.userId,
+        sessionId: payload.sessionId
+      };
+
+      next();
+    } catch (error) {
+      console.error('Lỗi xác thực:', error);
+      res.status(401).json({ message: 'Không được phép truy cập' });
+    }
+  };
+
+  // Middleware kiểm tra quyền admin
+  admin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      // Kiểm tra đã xác thực chưa
+      if (!req.user?.id) {
+        res.status(401).json({ message: 'Người dùng chưa được xác thực' });
+        return;
+      }
+
+      // Lấy thông tin user
+      const user = await this.userRepository.findById(req.user.id);
+      if (!user) {
+        res.status(401).json({ message: 'Người dùng không tồn tại' });
+        return;
+      }
+
+      // Kiểm tra quyền admin
+      if (!user.isAdmin()) {
+        res.status(403).json({ message: 'Không đủ quyền truy cập' });
+        return;
+      }
+
+      next();
+    } catch (error) {
+      console.error('Lỗi kiểm tra quyền admin:', error);
+      res.status(403).json({ message: 'Không đủ quyền truy cập' });
+    }
+  };
+}
+
+// src/modules/user/infrastructure/transport/http/dto/register-request.dto.ts
+export class RegisterRequestDto {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+// src/modules/user/infrastructure/transport/http/dto/login-request.dto.ts
+export class LoginRequestDto {
+  email: string;
+  password: string;
+}
+
+// src/modules/user/infrastructure/transport/http/dto/refresh-token-request.dto.ts
+export class RefreshTokenRequestDto {
+  refreshToken: string;
+}
+
+// src/modules/user/infrastructure/transport/http/routes.ts
+import { Router } from 'express';
+import { UserController } from './controllers/user.controller';
+import { AuthMiddleware } from './middleware/auth.middleware';
+
+export const configureUserRoutes = (
+  router: Router,
+  userController: UserController,
+  authMiddleware: AuthMiddleware
+): Router => {
+  // Đăng ký và đăng nhập (không yêu cầu xác thực)
+  router.post('/auth/register', userController.register.bind(userController));
+  router.post('/auth/login', userController.login.bind(userController));
+  router.post('/auth/refresh-token', userController.refreshToken.bind(userController));
+
+  // Các route yêu cầu xác thực
+  router.use('/auth', authMiddleware.auth);
+  router.post('/auth/logout', userController.logout.bind(userController));
+  router.post('/auth/logout/all', userController.logoutAllDevices.bind(userController));
+  router.post('/auth/logout/selected', userController.logoutSelectedDevices.bind(userController));
+  router.get('/auth/profile', userController.getProfile.bind(userController));
+  router.get('/auth/sessions', userController.getSessions.bind(userController));
+
+  return router;
+};
+
+// src/modules/user/infrastructure/auth-providers/IOAuthProvider.ts
+export interface OAuthUserInfo {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  profilePicture?: string;
+}
+
+export interface IOAuthProvider {
+  getName(): string;
+  getAuthorizationUrl(): string;
+  handleCallback(code: string): Promise<OAuthUserInfo>;
+}
+
+// src/modules/user/infrastructure/auth-providers/google.adapter.ts
+import axios from 'axios';
+import { IOAuthProvider, OAuthUserInfo } from './IOAuthProvider';
+
+export class GoogleOAuthAdapter implements IOAuthProvider {
+  private readonly clientId: string;
+  private readonly clientSecret: string;
+  private readonly redirectUri: string;
+  private readonly scopes: string[];
+
+  constructor() {
+    // Trong thực tế, các giá trị này sẽ được lấy từ environment variables
+    this.clientId = process.env.GOOGLE_CLIENT_ID || '';
+    this.clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+    this.redirectUri = process.env.GOOGLE_REDIRECT_URI || '';
+    this.scopes = ['profile', 'email'];
+  }
+
+  getName(): string {
+    return 'google';
+  }
+
+  getAuthorizationUrl(): string {
+    const scopeStr = this.scopes.join(' ');
+    return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${this.clientId}&redirect_uri=${encodeURIComponent(this.redirectUri)}&response_type=code&scope=${encodeURIComponent(scopeStr)}&access_type=offline&prompt=consent`;
+  }
+
+  async handleCallback(code: string): Promise<OAuthUserInfo> {
+    try {
+      // Đổi code lấy token
+      const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+        code,
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        redirect_uri: this.redirectUri,
+        grant_type: 'authorization_code'
+      });
+
+      const { access_token } = tokenResponse.data;
+
+      // Lấy thông tin người dùng
+      const userInfoResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: {
+          Authorization: `Bearer ${access_token}`
+        }
+      });
+
+      const userData = userInfoResponse.data;
+
+      // Chuyển đổi dữ liệu sang format thống nhất
+      return {
+        id: userData.sub,
+        email: userData.email,
+        firstName: userData.given_name,
+        lastName: userData.family_name,
+        profilePicture: userData.picture
+      };
+    } catch (error) {
+      console.error('Lỗi xác thực Google OAuth:', error);
+      throw new Error('Không thể xác thực với Google');
+    }
+  }
+}
+
+// src/modules/user/infrastructure/location/geoip.service.ts
+import axios from 'axios';
+
+export interface LocationInfo {
+  country: string;
+  city?: string;
+  region?: string;
+}
+
+export interface ILocationService {
+  getLocationFromIp(ipAddress: string): Promise<LocationInfo | null>;
+}
+
+export class GeoIpService implements ILocationService {
+  private readonly apiKey?: string;
+
+  constructor() {
+    this.apiKey = process.env.GEOIP_API_KEY;
+  }
+
+  async getLocationFromIp(ipAddress: string): Promise<LocationInfo | null> {
+    try {
+      // Bỏ qua localhost hoặc IP nội bộ
+      if (ipAddress === 'localhost' || ipAddress === '127.0.0.1' || ipAddress.startsWith('192.168.') || ipAddress.startsWith('10.')) {
+        return null;
+      }
+
+      // Sử dụng API ipinfo.io
+      const response = await axios.get(`https://ipinfo.io/${ipAddress}/json?token=${this.apiKey}`);
+      const data = response.data;
+
+      return {
+        country: data.country,
+        city: data.city,
+        region: data.region
+      };
+    } catch (error) {
+      console.error('Lỗi khi tìm vị trí từ IP:', error);
+      return null;
+    }
+  }
+}
+
+// src/modules/user/application/commands/handle-oauth-callback.command.ts
+import { IUserRepository } from '../../domain/repositories/IUserRepository';
+import { IUserSessionRepository } from '../../domain/repositories/IUserSessionRepository';
+import { ITokenService } from '../../domain/services/ITokenService';
+import { User } from '../../domain/entities/user.entity';
+import { UserSession } from '../../domain/entities/user-session.entity';
+import { AuthTokensDto } from '../dto/auth-tokens.dto';
+import { v4 as uuidv4 } from 'uuid';
+import { IOAuthProvider } from '../../infrastructure/auth-providers/IOAuthProvider';
+
+// Config
+const ACCESS_TOKEN_EXPIRY = 15 * 60; // 15 phút (giây)
+const REFRESH_TOKEN_EXPIRY = 30 * 24 * 60 * 60; // 30 ngày (giây)
+
+export class HandleOAuthCallbackCommand {
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly userSessionRepository: IUserSessionRepository,
+    private readonly tokenService: ITokenService,
+    private readonly oauthProviders: Map<string, IOAuthProvider>
+  ) {}
+
+  async execute(params: {
+    providerName: string;
+    code: string;
+    deviceInfo: string;
+    ipAddress: string;
+    location?: string;
+  }): Promise<AuthTokensDto> {
+    // Lấy provider từ danh sách
+    const provider = this.oauthProviders.get(params.providerName);
+    if (!provider) {
+      throw new Error('Nhà cung cấp OAuth không được hỗ trợ');
+    }
+
+    try {
+      // Lấy thông tin người dùng từ OAuth provider
+      const userInfo = await provider.handleCallback(params.code);
+      
+      // Tìm user theo email
+      let user = await this.userRepository.findByEmail(userInfo.email);
+      
+      if (!user) {
+        // Tạo user mới nếu chưa tồn tại
+        user = new User({
+          id: uuidv4(),
+          email: userInfo.email,
+          passwordHash: '', // Không cần mật khẩu cho đăng nhập OAuth
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+          isEmailVerified: true // Email đã được xác thực bởi OAuth provider
+        });
+        
+        await this.userRepository.create(user);
+      }
+      
+      // Tạo session mới
+      const sessionId = uuidv4();
+      const session = new UserSession({
+        id: sessionId,
+        userId: user.id,
+        deviceInfo: params.deviceInfo,
+        ipAddress: params.ipAddress,
+        location: params.location,
+        expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY * 1000)
+      });
+
+      // Lưu session vào database
+      await this.userSessionRepository.create(session);
+
+      // Tạo access token và refresh token
+      const tokens = await this.tokenService.generateTokens({
+        userId: user.id,
+        sessionId: session.id
+      });
+
+      // Trả về tokens
+      return new AuthTokensDto(
+        tokens.accessToken,
+        tokens.refreshToken,
+        ACCESS_TOKEN_EXPIRY
+      );
+    } catch (error) {
+      console.error(`Lỗi xác thực OAuth (${params.providerName}):`, error);
+      throw new Error(`Không thể xác thực với ${params.providerName}`);
+    }
+  }
+}
+
+// main.ts - Thiết lập phụ thuộc và khởi tạo ứng dụng
+import express from 'express';
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import { Sequelize } from 'sequelize-typescript';
+import { UserModel } from './modules/user/infrastructure/persistence/sequelize/models/user.model';
+import { UserSessionModel } from './modules/user/infrastructure/persistence/sequelize/models/user-session.model';
+
+// Repositories
+import { SequelizeUserRepository } from './modules/user/infrastructure/persistence/sequelize/repositories/sequelize-user.repository';
+import { SequelizeUserSessionRepository } from './modules/user/infrastructure/persistence/sequelize/repositories/sequelize-user-session.repository';
+
+// Services
+import { BcryptPasswordService } from './modules/user/infrastructure/security/bcrypt.service';
+import { JwtTokenService } from './modules/user/infrastructure/security/jwt.service';
+import { GeoIpService } from './modules/user/infrastructure/location/geoip.service';
+import { GoogleOAuthAdapter } from './modules/user/infrastructure/auth-providers/google.adapter';
+
+// Commands và Queries
+import { RegisterUserCommand } from './modules/user/application/commands/register-user.command';
+import { LoginUserCommand } from './modules/user/application/commands/login-user.command';
+import { RefreshTokenCommand } from './modules/user/application/commands/refresh-token.command';
+import { LogoutUserCommand } from './modules/user/application/commands/logout-user.command';
+import { LogoutAllDevicesCommand } from './modules/user/application/commands/logout-all-devices.command';
+import { LogoutSelectedDevicesCommand } from './modules/user/application/commands/logout-selected-devices.command';
+import { HandleOAuthCallbackCommand } from './modules/user/application/commands/handle-oauth-callback.command';
+import { GetUserProfileQuery } from './modules/user/application/queries/get-user-profile.query';
+import { GetUserSessionsQuery } from './modules/user/application/queries/get-user-sessions.query';
+
+// Controllers và Middlewares
+import { UserController } from './modules/user/infrastructure/transport/http/controllers/user.controller';
+import { AuthMiddleware } from './modules/user/infrastructure/transport/http/middleware/auth.middleware';
+import { configureUserRoutes } from './modules/user/infrastructure/transport/http/routes';
+import { IOAuthProvider } from './modules/user/infrastructure/auth-providers/IOAuthProvider';
+
+async function bootstrap() {
+  // Khởi tạo ứng dụng Express
+  const app = express();
+  
+  // Middleware
+  app.use(bodyParser.json());
+  app.use(cookieParser());
+  
+  // Khởi tạo kết nối database
+  const sequelize = new Sequelize({
+    dialect: 'mysql',
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '3306'),
+    username: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'auth_system',
+    models: [UserModel, UserSessionModel]
+  });
+
+  try {
+    // Kết nối database
+    await sequelize.authenticate();
+    console.log('Kết nối database thành công');
+
+    // Đồng bộ model với database (chỉ dùng trong môi trường phát triển)
+    if (process.env.NODE_ENV !== 'production') {
+      await sequelize.sync({ alter: true });
+      console.log('Đồng bộ model với database thành công');
+    }
+
+    // Khởi tạo repositories
+    const userRepository = new SequelizeUserRepository();
+    const userSessionRepository = new SequelizeUserSessionRepository();
+
+    // Khởi tạo services
+    const passwordService = new BcryptPasswordService();
+    const tokenService = new JwtTokenService();
+    const locationService = new GeoIpService();
+    
+    // Khởi tạo OAuth providers
+    const googleOAuthAdapter = new GoogleOAuthAdapter();
+    const oauthProviders = new Map<string, IOAuthProvider>();
+    oauthProviders.set(googleOAuthAdapter.getName(), googleOAuthAdapter);
+
+    // Khởi tạo commands
+    const registerUserCommand = new RegisterUserCommand(userRepository, passwordService);
+    const loginUserCommand = new LoginUserCommand(userRepository, userSessionRepository, passwordService, tokenService);
+    const refreshTokenCommand = new RefreshTokenCommand(userSessionRepository, tokenService);
+    const logoutUserCommand = new LogoutUserCommand(userSessionRepository, tokenService);
+    const logoutAllDevicesCommand = new LogoutAllDevicesCommand(userSessionRepository);
+    const logoutSelectedDevicesCommand = new LogoutSelectedDevicesCommand(userSessionRepository);
+    const handleOAuthCallbackCommand = new HandleOAuthCallbackCommand(userRepository, userSessionRepository, tokenService, oauthProviders);
+
+    // Khởi tạo queries
+    const getUserProfileQuery = new GetUserProfileQuery(userRepository);
+    const getUserSessionsQuery = new GetUserSessionsQuery(userSessionRepository);
+
+    // Khởi tạo middleware
+    const authMiddleware = new AuthMiddleware(tokenService, userRepository, userSessionRepository);
+
+    // Khởi tạo controller
+    const userController = new UserController(
+      registerUserCommand,
+      loginUserCommand,
+      refreshTokenCommand,
+      logoutUserCommand,
+      logoutAllDevicesCommand,
+      logoutSelectedDevicesCommand,
+      getUserProfileQuery,
+      getUserSessionsQuery
+    );
+
+    // Cấu hình routes
+    const router = express.Router();
+    configureUserRoutes(router, userController, authMiddleware);
+
+    // Đăng ký router vào ứng dụng
+    app.use('/api', router);
+
+    // Khởi động server
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server đang chạy tại http://localhost:${PORT}`);
+    });
+
+    // Lên lịch xóa các session hết hạn mỗi ngày
+    setInterval(async () => {
+      try {
+        const deletedCount = await userSessionRepository.deleteExpiredSessions();
+        console.log(`Đã xóa ${deletedCount} session hết hạn`);
+      } catch (error) {
+        console.error('Lỗi khi xóa session hết hạn:', error);
+      }
+    }, 24 * 60 * 60 * 1000); // Mỗi 24 giờ
+
+  } catch (error) {
+    console.error('Không thể kết nối đến database:', error);
+    process.exit(1);
+  }
+}
+
+// Khởi động ứng dụng
+bootstrap().catch(console.error);

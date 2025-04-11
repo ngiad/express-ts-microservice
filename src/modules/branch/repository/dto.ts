@@ -1,3 +1,4 @@
+// có thể để tên là model
 import { DataTypes, Model, Sequelize } from "sequelize";
 
 export class BranchPersistence extends Model {

@@ -1,3 +1,8 @@
+// có thể để tên là entity
+
+// model là liên quan tới db, định nghĩa với db
+
+// entity định nghĩa cấu trúc của đối tượng trong hệ thống, không liên quan tới db
 import { z } from "zod";
 import { ErrBranchNameTooShort } from "./error";
 
