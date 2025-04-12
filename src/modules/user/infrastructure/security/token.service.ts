@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { ITokenService, TokenPayloadType, TokenType } from "../../application/services/ITokenService";
+import { ResponseErrorUnauthorized } from "../../../../share/response/response.error";
 
 export class JwtService implements ITokenService {
     constructor(
@@ -11,7 +12,7 @@ export class JwtService implements ITokenService {
         const token = jwt.sign(
             payload, 
             this.secretKey as jwt.Secret, 
-            { expiresIn: "7d"}
+            { expiresIn: this.expirationTime as any}
         );
         return { token };
     }
@@ -20,8 +21,14 @@ export class JwtService implements ITokenService {
         try {
             const decoded = jwt.verify(token, this.secretKey as jwt.Secret) as TokenPayloadType;
             return decoded;
-        } catch (error) {
-            throw new Error("Invalid or expired token");
+        } catch (error: any) {
+            if (error.name === "TokenExpiredError") {
+                throw new ResponseErrorUnauthorized("Token has expired");
+            }
+            if (error.name === "JsonWebTokenError") {
+                throw new ResponseErrorUnauthorized("Invalid token");
+            }
+            throw new ResponseErrorUnauthorized("Token verification failed");
         }
     }
 }

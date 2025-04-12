@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { IBaseHttpService } from "../../../../share/interface";
+import { IBaseHttpService, IRPCBaseService } from "../../../../share/interface";
 import {
   UserCondType,
   UserCreateType,
@@ -19,4 +19,9 @@ export interface IUserHttpService
   > {
   loginAPI(req: Request, res: Response): Promise<void>;
   registerAPI(req: Request, res: Response): Promise<void>;
+}
+
+
+export interface IRPCUserService extends IRPCBaseService{
+  verifytoken(req: Request, res: Response): Promise<void>
 }

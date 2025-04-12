@@ -5,6 +5,7 @@ import { sequelize } from "./share/component/sequelize";
 import { setupBranchModule } from "./modules/branch";
 import { setupProductModule } from "./modules/product";
 import { setupUserModule } from "./modules/user";
+import { performenceMiddleware } from "./share/middleware/performance";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ dotenv.config();
     const port = process.env.PORT || 3321;
 
     app.use(express.json());
+    app.use(performenceMiddleware)
     app.get("/", (req: Request, res: Response) => {
       res.send("Hello World");
     })

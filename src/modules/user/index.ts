@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { Sequelize } from "sequelize";
-import { init, modelUserName } from "./infrastructure/persistence/sequelize/user.model";
 import {
+  init,
+  modelUserName,
+} from "./infrastructure/persistence/sequelize/user.model";
+import {
+  RPCUserRepository,
   UserCommandRepository,
   UserQueryRepository,
   UserRepository,
@@ -18,11 +22,18 @@ import { LoginCommand } from "./application/commands/login.command";
 import { JwtService } from "./infrastructure/security/token.service";
 import { config } from "../../share/component/config";
 import { RegisterCommand } from "./application/commands/register.command";
+import { VerifyTokenCommand } from "./application/commands/verifyToken.command";
+import {
+  authMiddleware,
+  roleHandlingMiddleware,
+} from "./infrastructure/transport/http/middleware";
+import { UserRole } from "./application/dto";
+import { RPCUserService } from "./infrastructure/transport/rpc";
 
 export const setupUserModule = (sequelize: Sequelize) => {
   init(sequelize);
   const bcryptService = new BcryptService();
-  const jwtService = new JwtService(config.secretKey,'7d')
+  const jwtService = new JwtService(config.secretKey, "7d");
   const queryueryRepo = new UserQueryRepository(sequelize, modelUserName);
   const commandRepo = new UserCommandRepository(sequelize, modelUserName);
 
@@ -38,9 +49,11 @@ export const setupUserModule = (sequelize: Sequelize) => {
   const listQuery = new UserListQuery(repository);
   const byCondQuery = new UserByCondQuery(repository);
 
+  const login = new LoginCommand(repository, bcryptService, jwtService);
+  const resister = new RegisterCommand(repository, bcryptService, jwtService);
 
-  const login = new LoginCommand(repository,bcryptService,jwtService)
-  const resister = new RegisterCommand(repository,bcryptService,jwtService)  
+  const verifyToken = new VerifyTokenCommand(repository, jwtService);
+
   const controller = new UserHttpService(
     createHandler,
     detailQuery,
@@ -53,17 +66,34 @@ export const setupUserModule = (sequelize: Sequelize) => {
   );
   const router = Router();
 
-  router.post("/auth/login",controller.loginAPI)
-  router.post("/auth/resister",controller.registerAPI)
-  router.post("/users", controller.createAPI);
+  router.post("/auth/login", controller.loginAPI);
+  router.post("/auth/resister", controller.registerAPI);
+  router.post(
+    "/users",
+    roleHandlingMiddleware([UserRole.ADMIN]),
+    controller.createAPI
+  );
   router.get("/users", controller.listAPI);
   router.get("/users/by", controller.byCondAPI);
   router.get("/users/:id", controller.detailAPI);
-  router.patch("/users/:id", controller.updateAPI);
-  router.delete("/users/:id", controller.deleteAPI);
+  router.patch(
+    "/users/:id",
+    authMiddleware(verifyToken),
+    roleHandlingMiddleware([UserRole.ADMIN, UserRole.BRANCH, UserRole.USER]),
+    controller.updateAPI
+  );
+  router.delete(
+    "/users/:id",
+    authMiddleware(verifyToken),
+    roleHandlingMiddleware([UserRole.ADMIN, UserRole.BRANCH, UserRole.USER]),
+    controller.deleteAPI
+  );
 
   // rpc
+  const rPCUserRepository = new RPCUserRepository(sequelize, modelUserName);
+  const rpcUserService = new RPCUserService(rPCUserRepository, verifyToken);
 
+  router.post("/rpc/verify", rpcUserService.verifytoken);
 
   return router;
 };

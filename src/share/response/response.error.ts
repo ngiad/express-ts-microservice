@@ -1,4 +1,4 @@
-import { Response } from "express";
+
 export class ResponseError extends Error {
   constructor(
     public readonly status: number = 500,

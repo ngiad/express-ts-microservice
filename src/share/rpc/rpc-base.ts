@@ -11,12 +11,12 @@ export class RPCBaseService<
 > implements IRPCBaseService
 {
   constructor(
-    private readonly _rpcQueryRepo: IRPCBaseQueryRepository<Entity, CondType>
+    protected readonly _rpcQueryRepo: IRPCBaseQueryRepository<Entity, CondType>
   ) {}
 
   getByIdRPC = async (req: Request, res: Response) => {
     if (!req.params.id) throw new ResponseErrorBadRequest("id is required");
-
+    
     const entity = await this._rpcQueryRepo.getById(req.params.id);
     if (!entity) throw new ResponseErrorNotFound();
 

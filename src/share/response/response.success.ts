@@ -12,6 +12,7 @@ export class ResponseSuccess<T> {
       success: true,
       message: this.message,
       value: this.data,
+      timeHandling : Date.now() - (res.locals.startTime || 0)
     });
   }
 }

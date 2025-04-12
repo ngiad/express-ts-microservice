@@ -9,6 +9,7 @@ import {
   ErrProductBranchId,
   ErrProductBranchIdNotFound,
   ErrProductCategoryId,
+  ErrProductCategoryIdNotFound,
   ErrProductValueValidate,
 } from "../model/error";
 import { ProductCreateSchema, ProductCreateType } from "../model/dto";
@@ -44,12 +45,13 @@ export class CreateProductService
     const checkBranch = await this._RPCProductBranch.getBranchById(
       validateProductCreate.data.branchId
     );
+    
     if (!checkBranch) throw ErrProductBranchIdNotFound;
-
+    
     const checkCategory = await this._RPCProductCategory.getCategoryById(
       validateProductCreate.data.categoryId
     );
-    if (!checkCategory) throw ErrProductBranchIdNotFound;
+    if (!checkCategory) throw ErrProductCategoryIdNotFound;
 
     const product: ProductType = {
       id: v7(),

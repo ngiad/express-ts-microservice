@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { pagingDTO } from "../model/paging";
+import { z } from "zod";
 
 export interface IBaseHttpService<Entity, CondType, CreateDTO, UpdateDTO> {
   createAPI(req: Request, res: Response): Promise<void>;
@@ -82,4 +83,45 @@ export interface IRPCBaseQueryRepository<Entity, CondType> {
     getById(id: string): Promise<Entity | null>;
     getByCond(cond: CondType): Promise<Entity | null>;
     getByList(cond: CondType): Promise<Array<Entity>>;
+}
+
+
+
+
+export interface IVerifyGlobalCommand {
+  data : string
+}
+
+
+export enum UserRole{
+  BRANCH = "branch",
+  ADMIN = "admin",
+  USER = "user"
+}
+
+export enum UserStatus {
+    Active = "active",
+    Inactive = "inactive",
+    Deleted = "deleted",
+    Banner = "banner",
+    Featured = "featured",
+}
+
+export const UserGlobalResponseSchema = z.object({
+  name: z.string().min(1).optional(),
+  image: z.string().nullable().optional(),
+  email: z.string().email().optional().nullable(),
+  username: z.string().min(6),
+  role: z.nativeEnum(UserRole).optional(),
+  location: z.string().optional().nullable(),
+  bio: z.string().optional().nullable(),
+  id: z.string().uuid(),
+  status: z.nativeEnum(UserStatus),
+});
+
+export type UserResponseGlobalType = z.infer<typeof UserGlobalResponseSchema>;
+
+
+export interface IIntrospect{
+  verify(token : string):Promise<UserResponseGlobalType>
 }

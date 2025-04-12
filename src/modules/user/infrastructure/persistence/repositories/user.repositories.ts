@@ -14,6 +14,8 @@ import {
 } from "../../../application/dto";
 import { UserType } from "../../../domain/entities/user.entity";
 import { BaseQueryRepository } from "../../../../../share/repository/base-query-sequelize";
+import { RPCBaseRepository } from "../../../../../share/repository/base-rpc-sequelize";
+import { IRPCUserRepository } from "../../../domain/repositories/user.repository";
 
 export class UserRepository
   extends BaseRepoSequelize<
@@ -62,4 +64,12 @@ export class UserQueryRepository
   constructor(sequelize: Sequelize, modelName: string) {
     super(sequelize, modelName);
   }
+}
+
+export class RPCUserRepository
+  extends RPCBaseRepository<UserType, UserCondType>
+  implements IRPCUserRepository {
+    constructor(sequelize: Sequelize, modelName: string) {
+      super(sequelize, modelName);
+    }
 }

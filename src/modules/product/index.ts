@@ -19,6 +19,11 @@ import {
   RPCProductCategoryRopository,
 } from "./repository/rpc-repository";
 import { config } from "../../share/component/config";
+import { VerifyGlobalCommand } from "../../share/usecase/commands/verifyGlobalCommand";
+import { roleHandlingGlobalMiddleware } from "../../share/middleware/role";
+import { authGlobalMiddleware } from "../../share/middleware/auth";
+import { UserRole } from "../../share/interface";
+import { Introspect } from "../../share/repository/introspec-rpc";
 
 export const setupProductModule = (sequelize: Sequelize) => {
   init(sequelize);
@@ -76,13 +81,32 @@ export const setupProductModule = (sequelize: Sequelize) => {
     productCategoryRepo
   );
 
+  const introspect = new Introspect(config.rpc.userRPC);
+
+  const verifyGlobal = new VerifyGlobalCommand(introspect);
+
   const router = Router();
 
-  router.post("/products", controller.createAPI);
+  router.post(
+    "/products",
+    authGlobalMiddleware(verifyGlobal),
+    roleHandlingGlobalMiddleware([UserRole.BRANCH, UserRole.ADMIN]),
+    controller.createAPI
+  );
   router.get("/products", controller.listAPI);
   router.get("/products/by", controller.byCondAPI);
   router.get("/products/:id", controller.detailAPI);
-  router.patch("/products/:id", controller.updateAPI);
-  router.delete("/products/:id", controller.deleteAPI);
+  router.patch(
+    "/products/:id",
+    authGlobalMiddleware(verifyGlobal),
+    roleHandlingGlobalMiddleware([UserRole.BRANCH, UserRole.ADMIN]),
+    controller.updateAPI
+  );
+  router.delete(
+    "/products/:id",
+    authGlobalMiddleware(verifyGlobal),
+    roleHandlingGlobalMiddleware([UserRole.BRANCH, UserRole.ADMIN]),
+    controller.deleteAPI
+  );
   return router;
 };

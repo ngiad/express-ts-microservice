@@ -32,7 +32,7 @@ export class RPCProductCategoryRopository implements IRPCCategoryQueryRepository
     getCategoryById = async (id: string): Promise<ProductCategoryType | null> => {
         try {
             const { data } = await axios.get(`${this.baseUrl}/v1/api/rpc/categories/${id}`);
-            const category = ProductCategorySchema.parse(data.data) 
+            const category = ProductCategorySchema.parse(data.value) 
             return category; 
         } catch (error) {
             return null

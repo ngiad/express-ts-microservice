@@ -13,10 +13,10 @@ export class VerifyTokenCommand implements ICommandHandler<IVerifyTokenCommand,U
 
     execute = async(command: IVerifyTokenCommand): Promise<UserResponseType> => {
          const tokenValidate = command.data 
-
          if(!tokenValidate) throw ErrTokenNotfound
-         const sub = this._tokenService.verifyToken(tokenValidate)
-         const user = await this._repository.byCond({id : sub})
+         const payload = this._tokenService.verifyToken(tokenValidate)
+         
+         const user = await this._repository.byCond({id : payload.sub})
          return UserResponseSchema.parse(user)
     }
 }
