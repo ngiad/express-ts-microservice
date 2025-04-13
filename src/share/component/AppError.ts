@@ -1,74 +1,3 @@
-// import { ZodError } from "zod";
-// import { ResponseError } from "../response/response.error";
-
-// export class AppError extends ResponseError {
-//   private rootCause?: ResponseError;
-//   private constructor(
-//     public readonly status: number = 500,
-//     public readonly message: string = "Internal server error",
-//     public readonly data?: any,
-//     public detail?: any,
-//     public logMessageErr?: any
-//   ) {
-//     super(status, message, data);
-//   }
-
-//   static from(err: ResponseError) {
-//     return new AppError(err.status, err.message, err.data ?? null);
-//   }
-
-//   getRootCause(): ResponseError | null {
-//     if (this.rootCause)
-//       return this.rootCause instanceof AppError
-//         ? this.rootCause.getRootCause()
-//         : this.rootCause;
-//     return null;
-//   }
-
-//   // wrapper (Design pattern)
-//   wrap(rootCause: ResponseError | ZodError): AppError {
-//     const appError = AppError.from(this);
-//     appError.rootCause = rootCause;
-//     return appError;
-//   }
-
-//   // SETTER CHAIN (Design pattern hỗ trợ code không thuộc Design pattern OOP)
-//   withDetai(key: string, value: any): AppError {
-//     this.detail[key] = value;
-//     return this;
-//   }
-
-//   // SETTER CHAIN (Design pattern hỗ trợ code không thuộc Design pattern OOP)
-//   withLog(logMessage: string): AppError {
-//     this.logMessageErr = logMessage;
-//     return this;
-//   }
-
-//   toJSON(isProduction: boolean = true) {
-//     const rootCause = this.getRootCause();
-//     return isProduction
-//       ? {
-//           message: this.message,
-//           status: this.status,
-//           detail: this.detail,
-//         }
-//       : {
-//           message: this.message,
-//           status: this.status,
-//           detail: this.detail,
-//           rootCause: rootCause ? rootCause.message : this.message,
-//           logMessage: this.logMessageErr,
-//           rootStack: rootCause ? rootCause.stack : this.stack,
-//         };
-//   }
-
-//   getStatusCode(): number {
-//     return this.status;
-//   }
-// }
-
-
-
 import { ZodError } from "zod";
 import { ResponseError } from "../response/response.error";
 
@@ -107,23 +36,23 @@ export class AppError extends ResponseError {
     }
     return this.rootCause ?? null;
   }
-
+  // wrapper (Design pattern)
   wrap(rootCause: ResponseError | ZodError): AppError {
     const appError = AppError.from(this);
     appError.rootCause = rootCause;
     return appError;
   }
-
+  // SETTER CHAIN (Design pattern hỗ trợ code không thuộc Design pattern OOP)
   withDetail(key: string, value: any): AppError {
     this.detail[key] = value;
     return this;
   }
-
+  // SETTER CHAIN (Design pattern hỗ trợ code không thuộc Design pattern OOP)
   withLog(logMessage: string): AppError {
     this.logMessageErr = logMessage;
     return this;
   }
-
+  // SETTER CHAIN (Design pattern hỗ trợ code không thuộc Design pattern OOP)
   toJSON(isProduction: boolean = true) {
     const rootCauseOutput =
       this.getRootCause() && this.getRootCause() instanceof ResponseError
