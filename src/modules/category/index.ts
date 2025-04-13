@@ -14,12 +14,13 @@ import { authGlobalMiddleware } from "../../share/middleware/auth";
 import { roleHandlingGlobalMiddleware } from "../../share/middleware/role";
 import { UserRole } from "../../share/interface";
 import { Introspect } from "../../share/repository/introspec-rpc";
+import { wrapClassMethods } from "../../share/utils/wrapClassMethods";
 
 export const setupCategoryModule = (sequelize: Sequelize) => {
   init(sequelize);
   const repository = new CategoryRepository(sequelize, modelName);
   const service = new CategoryService(repository);
-  const controller = new CategoryHttpService(service);
+  const controller = wrapClassMethods(new CategoryHttpService(service))
   const router = Router();
 
   const introspect = new Introspect(config.rpc.userRPC);
@@ -49,7 +50,7 @@ export const setupCategoryModule = (sequelize: Sequelize) => {
 
   // rpc
   const rpcCategoryRepository = new RPCCategoryRepository(sequelize, modelName);
-  const rpcCategoryService = new RPCCategoryService(rpcCategoryRepository);
+  const rpcCategoryService = wrapClassMethods(new RPCCategoryService(rpcCategoryRepository))
   router.get("/rpc/categories/:id", rpcCategoryService.getByIdRPC);
   router.get("/rpc/categories", rpcCategoryService.getbylistRPC);
   router.get("/rpc/categories/by", rpcCategoryService.getByCondRPC);

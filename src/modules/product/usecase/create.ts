@@ -36,7 +36,7 @@ export class CreateProductService
     const validateProductCreate = ProductCreateSchema.safeParse(command.data);
 
     if (validateProductCreate.error) {
-      throw ErrProductValueValidate;
+      throw validateProductCreate.error;
     }
 
     if (!validateProductCreate.data.branchId) throw ErrProductBranchId;

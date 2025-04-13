@@ -21,6 +21,7 @@ import { UserRole } from "../../share/interface";
 import { roleHandlingGlobalMiddleware } from "../../share/middleware/role";
 import { authGlobalMiddleware } from "../../share/middleware/auth";
 import { Introspect } from "../../share/repository/introspec-rpc";
+import { wrapClassMethods } from "../../share/utils/wrapClassMethods";
 
 export const setupBranchModule = (sequelize: Sequelize) => {
   init(sequelize);
@@ -42,14 +43,14 @@ export const setupBranchModule = (sequelize: Sequelize) => {
   const listQuery = new GetListBranch(repository);
   const byCondQuery = new GetByCondBranchService(repository);
 
-  const controller = new BranchHttpService(
+  const controller = wrapClassMethods<BranchHttpService>(new BranchHttpService(
     createHandler,
     detailQuery,
     updateHandler,
     listQuery,
     deleteHandler,
     byCondQuery
-  );
+  ))
 
   const introspect = new Introspect(config.rpc.userRPC)
 
@@ -84,7 +85,7 @@ export const setupBranchModule = (sequelize: Sequelize) => {
     sequelize,
     modelBranchName
   );
-  const rpcBranchService = new RPCBranchService(rpcBranchRepository);
+  const rpcBranchService = wrapClassMethods<RPCBranchService>(new RPCBranchService(rpcBranchRepository))
   router.get("/rpc/branches/:id", rpcBranchService.getByIdRPC);
   router.get("/rpc/branches", rpcBranchService.getbylistRPC);
   router.get("/rpc/branches/by", rpcBranchService.getByCondRPC);

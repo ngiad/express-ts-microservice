@@ -15,15 +15,10 @@ export class BranchUpdateService
   constructor(private readonly _repository: IBranchRepository) {}
 
   execute = async (command: IBaseUpdateService<BranchUpdateType>): Promise<BranchType> => {
-    const branchUpdateValidate = BranchUpdateSchema.safeParse(command.data);
-    if (!branchUpdateValidate.success) {
-      throw ErrBranchValueValidate;
-    }
-
     if (!command.id) throw ErrBranchIdInvalid;
-
+    const branchUpdateValidate = BranchUpdateSchema.safeParse(command.data);
     if (branchUpdateValidate.error) {
-      throw ErrBranchValueValidate;
+      throw branchUpdateValidate.error;
     }
 
     const branch: BranchType | null = await this._repository.detail(command.id);

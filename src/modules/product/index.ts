@@ -24,6 +24,7 @@ import { roleHandlingGlobalMiddleware } from "../../share/middleware/role";
 import { authGlobalMiddleware } from "../../share/middleware/auth";
 import { UserRole } from "../../share/interface";
 import { Introspect } from "../../share/repository/introspec-rpc";
+import { wrapClassMethods } from "../../share/utils/wrapClassMethods";
 
 export const setupProductModule = (sequelize: Sequelize) => {
   init(sequelize);
@@ -69,7 +70,7 @@ export const setupProductModule = (sequelize: Sequelize) => {
   );
   const byCondQuery = new GetProductByCondService(repository);
 
-  const controller = new ProductHttpService(
+  const controller = wrapClassMethods<ProductHttpService>(new ProductHttpService(
     createHandler,
     detailQuery,
     updateHandler,
@@ -79,7 +80,7 @@ export const setupProductModule = (sequelize: Sequelize) => {
     // productBranchRepo,
     proxyProductBranchRepo, // demo proxy pattern
     productCategoryRepo
-  );
+  ))
 
   const introspect = new Introspect(config.rpc.userRPC);
 

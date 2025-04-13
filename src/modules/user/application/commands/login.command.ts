@@ -17,7 +17,7 @@ export class LoginCommand
 
   execute = async(command: ILoginCommand): Promise<TokenType> => {
        const dataValidate = loginSchema.safeParse(command.data)
-        if(dataValidate.error) throw ErrLoginValidation
+        if(dataValidate.error) throw dataValidate.error
 
         const userExits = await this._repository.byCond({
             username : dataValidate.data.username

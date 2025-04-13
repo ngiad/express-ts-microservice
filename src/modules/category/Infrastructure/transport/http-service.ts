@@ -6,7 +6,10 @@ import {
   CategoryCreateType,
   CategoryUpdateSchema,
 } from "../../model/dto";
-import { paginSchema } from "../../../../share/model/paging";
+import { pagingDTO, paginSchema } from "../../../../share/model/paging";
+import { ResponseSuccess, ResponseSuccessDelete, ResponseSuccessUpdate } from "../../../../share/response/response.success";
+import { CategoryType } from "../../model";
+import { ErrCategoryIdValidate } from "../../model/error";
 
 export class CategoryHttpService {
   constructor(private readonly service: ICategoryService) {}
@@ -15,47 +18,32 @@ export class CategoryHttpService {
     const { success, data, error } = CategoryCreateSchema.safeParse(req.body);
 
     if (!success) {
-      res.status(400).json({ error: error.format() });
-      return;
+      throw error
     }
     const result = await this.service.create(data as CategoryCreateType);
-    res.status(201).json({
-      success: true,
-      data: result,
-    });
+    new ResponseSuccess<CategoryType>(result).send(res)
   };
 
   detailAPI = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
-      res.status(400).json({ error: "id not found" });
-      return;
+      throw ErrCategoryIdValidate
     }
 
     const result = await this.service.detail(id);
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
-    return;
+    new ResponseSuccess<CategoryType>(result).send(res)
   };
 
   listAPI = async (req: Request, res: Response) => {
     const pagingValidation = paginSchema.safeParse(req.query);
     if (!pagingValidation.success) {
-      res
-        .status(400)
-        .json({ success: false, error: pagingValidation.error.format() });
-      return;
+      throw pagingValidation.error
     }
 
     const condValidation = CategoryCondSchema.safeParse(req.query);
     if (!condValidation.success) {
-      res
-        .status(400)
-        .json({ success: false, error: condValidation.error.format() });
-      return;
+      throw condValidation.error
     }
 
     const paging = pagingValidation.data;
@@ -63,42 +51,31 @@ export class CategoryHttpService {
 
     const data = await this.service.list(cond, paging);
 
-    res.json({
-      success: true,
+
+    new ResponseSuccess<{data : Array<CategoryType>; paging : pagingDTO}>({
       paging: { ...paging, total: paging.total },
       data,
-    });
-    return;
+    }).send(res)
   };
 
   updateAPI = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { success, data, error } = CategoryUpdateSchema.safeParse(req.body);
     if (!success) {
-      res.status(400).json({ error: error.format() });
-      return;
+      throw error
     }
 
     const result = await this.service.update(id, data);
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
-    return;
+    new ResponseSuccessUpdate<CategoryType>(result).send(res)
   };
 
   deleteAPI = async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!id) {
-      res.status(400).json({ error: "id not found" });
-      return;
+      throw ErrCategoryIdValidate
     }
 
     const result = await this.service.delete(id);
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
-    return;
+    new ResponseSuccessDelete(result).send(res)
   };
 }

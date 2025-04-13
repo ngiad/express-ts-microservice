@@ -29,6 +29,7 @@ import {
 } from "./infrastructure/transport/http/middleware";
 import { UserRole } from "./application/dto";
 import { RPCUserService } from "./infrastructure/transport/rpc";
+import { wrapClassMethods } from "../../share/utils/wrapClassMethods";
 
 export const setupUserModule = (sequelize: Sequelize) => {
   init(sequelize);
@@ -54,7 +55,7 @@ export const setupUserModule = (sequelize: Sequelize) => {
 
   const verifyToken = new VerifyTokenCommand(repository, jwtService);
 
-  const controller = new UserHttpService(
+  const controller = wrapClassMethods<UserHttpService>(new UserHttpService(
     createHandler,
     detailQuery,
     updateHandler,
@@ -63,7 +64,7 @@ export const setupUserModule = (sequelize: Sequelize) => {
     byCondQuery,
     login,
     resister
-  );
+  )) 
   const router = Router();
 
   router.post("/auth/login", controller.loginAPI);
@@ -91,7 +92,7 @@ export const setupUserModule = (sequelize: Sequelize) => {
 
   // rpc
   const rPCUserRepository = new RPCUserRepository(sequelize, modelUserName);
-  const rpcUserService = new RPCUserService(rPCUserRepository, verifyToken);
+  const rpcUserService = wrapClassMethods<RPCUserService>(new RPCUserService(rPCUserRepository, verifyToken));
 
   router.post("/rpc/verify", rpcUserService.verifytoken);
 

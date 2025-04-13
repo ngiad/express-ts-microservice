@@ -2,7 +2,7 @@ import { v7 } from "uuid";
 import { IBranchRepository } from "../interface";
 import { BranchStatus, BranchType } from "../model";
 import { BranchCreateSchema, BranchCreateType } from "../model/dto";
-import { ErrBranchNameDublicate, ErrBranchValueValidate } from "../model/error";
+import { ErrBranchNameDublicate } from "../model/error";
 import { IBaseCreateService, ICommandHandler } from "../../../share/interface";
 
 
@@ -13,7 +13,7 @@ export class CreateBranchService implements ICommandHandler<IBaseCreateService<B
         const validateBranchCreate = BranchCreateSchema.safeParse(command.data);
 
         if (validateBranchCreate.error) {
-          throw ErrBranchValueValidate;
+          throw validateBranchCreate.error;
         }
     
         const branchExits = await this._repository.byName(validateBranchCreate.data.name);

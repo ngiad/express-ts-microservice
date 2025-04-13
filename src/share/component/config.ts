@@ -8,5 +8,6 @@ export const config = {
         userRPC : process.env.RPC_USER || "http://localhost:3321"
     },
 
-    secretKey : process.env.SECRRTKEY || "nghia dep zai"
+    secretKey : process.env.SECRRTKEY || "nghia dep zai",
+    product : process.env.PRODUCTION || "dev"
 }
