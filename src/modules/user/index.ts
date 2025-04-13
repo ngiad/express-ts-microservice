@@ -71,6 +71,7 @@ export const setupUserModule = (sequelize: Sequelize) => {
   router.post("/auth/resister", controller.registerAPI);
   router.post(
     "/users",
+    authMiddleware(verifyToken),
     roleHandlingMiddleware([UserRole.ADMIN]),
     controller.createAPI
   );
