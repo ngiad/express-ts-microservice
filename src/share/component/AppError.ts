@@ -73,7 +73,7 @@ import { ZodError } from "zod";
 import { ResponseError } from "../response/response.error";
 
 export class AppError extends ResponseError {
-  public rootCause?: ResponseError | ZodError;
+  private rootCause?: ResponseError | ZodError;
   private constructor(
     public readonly status: number = 500,
     public readonly message: string = "Internal server error",
@@ -94,7 +94,7 @@ export class AppError extends ResponseError {
     if (err instanceof ZodError) {
       const flattened = err.flatten();
       const detail = flattened.fieldErrors || {};
-      const appError = new AppError(400, "Validation error", null, detail);
+      const appError = new AppError(422, "Validation error", null, detail);
       appError.rootCause = err;
       return appError;
     }
