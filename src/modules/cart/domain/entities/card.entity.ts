@@ -1,14 +1,24 @@
 import { z } from "zod";
 
+export const CartItemBranchSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(2),
+  image: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  location: z.string().min(2, "location must be at least 2 characters").nullable().optional(),
+  tagLine : z.string().nullable().optional()
+})
+
+export type CartItemBranchType = z.infer<typeof CartItemBranchSchema>;
+
 export const CartProductSchema = z.object({
-  id: z.string(),
-  productId: z.string(),
-  name: z.string(),
-  image: z.string(),
-  price: z.number(),
-  discount: z.number().optional(),
+  id: z.string().optional(),
+  name: z.string().optional(),
+  image: z.string().optional(),
+  price: z.coerce.number().optional(),
+  discount: z.coerce.number().optional(),
   quantity: z.number().min(1).default(1),
-  branchId: z.string(),
+  branchId: z.string().optional(),
 });
 
 export type CartProductType = z.infer<typeof CartProductSchema>;
@@ -19,25 +29,11 @@ export const CartSchema = z.object({
   productId: z.string(),
   attributes: z.string().nullable().optional().default(""),
   quantity: z.number().min(1).default(1),
-  branchId: z.string(),
 });
 
 export type CartType = z.infer<typeof CartSchema>;
 
-export const CartBranchSchema = z.object({
-  id: z.string(),
-  name: z.string().min(2),
-  image: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  location: z
-    .string()
-    .min(2, "location must be at least 2 characters")
-    .optional(),
-  tagLine: z.string().nullable().optional(),
-});
-export type CartBranchType = z.infer<typeof CartBranchSchema>;
-
 export type CartResponseType = CartType & {
-  branch?: CartBranchType;
   product?: CartProductType;
+  branch?: CartItemBranchType;
 };

@@ -18,7 +18,10 @@ import {
   CartUpdateType,
 } from "../../../../domain/object-value";
 import { ICreateCartItemCommand } from "../../../interface";
-import { ResponseSuccessCreate } from "../../../../../../share/response/response.success";
+import {
+  ResponseSuccessCreate,
+  ResponseSuccessList,
+} from "../../../../../../share/response/response.success";
 import { ResponseErrorNotFound } from "../../../../../../share/response/response.error";
 
 export class CartHttpController
@@ -38,7 +41,6 @@ export class CartHttpController
 {
   constructor(handlers: {
     createHandler: ICommandHandler<ICreateCartItemCommand, CartResponseType>;
-    detailQuery?: IQueryHandler<IBaseGetDetail, CartResponseType>;
     updateHandler: ICommandHandler<
       IBaseUpdateService<CartUpdateType>,
       CartResponseType
@@ -48,15 +50,27 @@ export class CartHttpController
       { data: Array<CartResponseType>; paging: pagingDTO }
     >;
     deleteHandler: ICommandHandler<IBaseDeleteService, boolean>;
-    bycondQuery?: IQueryHandler<IBaseGetByCond<CartCondType>, CartResponseType>;
   }) {
     super(handlers);
   }
 
   createAPI = async (req: Request, res: Response) => {
-    if (!this.createHandler) throw new ResponseErrorNotFound();
     new ResponseSuccessCreate<CartResponseType>(
-      await this.createHandler.execute({ data: {...req.body, userId : res.locals.user.id } })
+      await this.createHandler!.execute({
+        data: { ...req.body, userId: res.locals.user.id },
+      })
+    ).send(res);
+  };
+
+  listAPI = async (req: Request, res: Response) => {
+    new ResponseSuccessList<{
+      data: Array<CartResponseType>;
+      paging: pagingDTO;
+    }>(
+      await this.listQuery!.query({query : {
+        ...req.query,
+        userId: res.locals.user.id,
+      }} as unknown as IBaseGetList<CartCondType, pagingDTO>)
     ).send(res);
   };
 }

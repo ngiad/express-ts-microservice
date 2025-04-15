@@ -3,7 +3,6 @@ import { DataTypes, Model, Sequelize } from "sequelize";
 export class CartItem extends Model {
   public id!: string;
   public userId!: string;
-  public branchId!: string;
   public productId!: string;
   public attributes!: string;
   public quantity!: number;
@@ -26,11 +25,6 @@ export function initCartItemModel(sequelize: Sequelize) {
         type: DataTypes.STRING,
         allowNull: false,
         field: "user_id",
-      },
-      branchId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        field: "branch_id",
       },
       productId: {
         type: DataTypes.STRING,

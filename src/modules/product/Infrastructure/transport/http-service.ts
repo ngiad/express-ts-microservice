@@ -57,8 +57,7 @@ export class ProductHttpService
   detailAPI = async (req: Request, res: Response): Promise<void> => {
     const productId = req.params.id;
     if (!productId) throw new Error("productId not found");
-
-    const product = await this.detailQuery!.query({ id: productId }); // Use non-null assertion here
+    const product = await this.detailQuery!.query({ id: productId });
 
     const branchId = product?.branchId;
     const categoryId = product?.categoryId;

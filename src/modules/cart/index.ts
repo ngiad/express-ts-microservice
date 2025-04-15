@@ -2,7 +2,6 @@ import { Router } from "express";
 import { Sequelize } from "sequelize";
 import { initCartItemModel, modelCartName } from "./infrastructure/persistence/mysql-sequelize/sequelize/cart.model";
 import { CartCommandRepository, CartQueryRepository, CartRepository, RPCCartRepository } from "./infrastructure/persistence/mysql-sequelize/repositories/cart.repository";
-import { CreateCartItemCommand } from "./application/usecase/commands/createcartitem.command";
 import { DeleteCartItemCommand } from "./application/usecase/commands/deleteCartItem.command";
 import { UpdateCartItemCommand } from "./application/usecase/commands/updateCartItem.command";
 import { ListCartItemQuery } from "./application/usecase/queries/listCartItem.query";
@@ -12,11 +11,16 @@ import { Introspect } from "../../share/repository/introspec-rpc";
 import { config } from "../../share/component/config";
 import { VerifyGlobalCommand } from "../../share/usecase/commands/verifyGlobalCommand";
 import { authGlobalMiddleware } from "../../share/middleware/auth";
+import { CreateCartItemCommand } from "./application/usecase/commands/createCartItem.command";
+import { RPCBranchCartItem, RPCProductRepository } from "./infrastructure/persistence/rpc-repository";
 
 
 
 export const setupCartModule = (sequelize: Sequelize) => {
   initCartItemModel(sequelize);
+  const rpcProductRepository = new RPCProductRepository(config.rpc.productRPC)
+  const rpcBranchRepository = new RPCBranchCartItem(config.rpc.branchRPC)
+
   const CartQueryRepo = new CartQueryRepository(sequelize, modelCartName);
   const CartCommandRepo = new CartCommandRepository(
     sequelize,
@@ -26,12 +30,12 @@ export const setupCartModule = (sequelize: Sequelize) => {
   const repository = new CartRepository(CartQueryRepo, CartCommandRepo);
   // command query pattenr
   // command
-  const createHandler = new CreateCartItemCommand(repository);
+  const createHandler = new CreateCartItemCommand(repository, rpcProductRepository);
   const updateHandler = new UpdateCartItemCommand(repository);
   const deleteHandler = new DeleteCartItemCommand(repository);
 
   // query
-  const listQuery = new ListCartItemQuery(repository);
+  const listQuery = new ListCartItemQuery(repository,rpcProductRepository,rpcBranchRepository);
 
 
   const controller = wrapClassMethods<CartHttpController>(new CartHttpController({
@@ -52,7 +56,7 @@ export const setupCartModule = (sequelize: Sequelize) => {
     authGlobalMiddleware(verifyGlobal),
     controller.createAPI
   );
-  router.get("/cart", controller.listAPI);
+  router.get("/cart", authGlobalMiddleware(verifyGlobal), controller.listAPI);
   router.patch(
     "/cart/:id",
     authGlobalMiddleware(verifyGlobal),

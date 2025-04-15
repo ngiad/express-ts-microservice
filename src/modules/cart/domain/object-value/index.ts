@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { BaseCondSchema } from "../../../../share/model/base-cond";
-import { BranchStatus } from "../../../branch/model";
 
 
 const stringOrRecord = z.union([z.string(), z.record(z.any()) as any]);
@@ -17,7 +16,6 @@ export const CartCondSchema = BaseCondSchema.merge(z.object({
     productId : asArrayOrSingle(uuidOrRecord).optional(),
     attributes : asArrayOrSingle(stringOrRecord).optional(),
     quantity: z.union([z.number(), z.record(z.any()) as any]).optional(),
-    branchId : asArrayOrSingle(uuidOrRecord).optional(),
     createdAt: asArrayOrSingle(dateOrRecord).optional(),
     updatedAt: asArrayOrSingle(dateOrRecord).optional(),
 }))
@@ -28,7 +26,6 @@ export type CartCondType = z.infer<typeof CartCondSchema>
 export const CartCreateSchema = z.object({
     userId : z.string().uuid(),
     productId : z.string().uuid(),
-    branchId : z.string(),
     attributes : z.string().nullable().optional().default(""),
     quantity : z.number().min(1).default(1),
 })

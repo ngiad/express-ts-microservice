@@ -12,6 +12,7 @@ export interface IBaseHttpService<Entity, CondType, CreateDTO, UpdateDTO> {
 }
 
 
+
 export interface IUseCase<CreateType, UpdateType, CondType, Entity> {
   create(data: CreateType): Promise<Entity>;
   update(id: string, data: UpdateType): Promise<Entity>;

@@ -7,11 +7,16 @@ import {
 } from "../../../domain/object-value";
 import { ICartRepository } from "../../../domain/repositories/card.repository";
 import { ICreateCartItemCommand } from "../../interface";
+import { IProductRPCRepository } from "../../../domain/repositories/product.rpc.repository";
+import { ErrProductNotfound } from "../../error";
 
 export class CreateCartItemCommand
   implements ICommandHandler<ICreateCartItemCommand, CartResponseType>
 {
-  constructor(private readonly _repository: ICartRepository) {}
+  constructor(
+    private readonly _repository: ICartRepository,
+    private readonly _rpcProductRepository  : IProductRPCRepository
+  ) {}
 
   execute = async (
     command: ICreateCartItemCommand
@@ -22,7 +27,7 @@ export class CreateCartItemCommand
     const cartExist = await this._repository.byCond({
       userId: validate.data.userId,
       productId: validate.data.productId,
-      branchId: validate.data.branchId,
+      attributes: validate.data.attributes,
     });
 
     if (cartExist) {
@@ -33,7 +38,8 @@ export class CreateCartItemCommand
       });
     }
 
-
+    const product = await this._rpcProductRepository.getById(validate.data.productId)
+    if(!product) throw ErrProductNotfound
 
     return await this._repository.insert({
         id : v7(),
