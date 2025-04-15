@@ -33,30 +33,22 @@ export class ListCartItemQuery
   
     const productIds = cartItems.data.map((item) => item.productId);
     const products = await this._rpcProductRepository.getByList(productIds);
+    const productMap = new Map(products.map((p) => [p.id, p]));
   
     const branchIds = products
-      .map((item) => item.branchId)
-      .filter((id) => id !== undefined);
-  
+      .map((p) => p.branchId)
+      .filter((id): id is string => !!id); 
     const branches = await this._rpcBranchRepository.getByList(branchIds);
     const branchMap = new Map(branches.map((b) => [b.id, b]));
   
-    const productMap = new Map(
-      products.map((p) => [
-        p.id,
-        {
-          ...p,
-          branch: p.branchId ? branchMap.get(p.branchId) : undefined,
-        },
-      ])
-    );
-  
     const result: CartResponseType[] = cartItems.data.map((item) => {
       const product = productMap.get(item.productId);
+      const branch = product?.branchId ? branchMap.get(product.branchId) : undefined;
   
       return {
         ...item,
         product,
+        branch,
       };
     });
   
