@@ -20,7 +20,7 @@ export const setupCategoryModule = (sequelize: Sequelize) => {
   init(sequelize);
   const repository = new CategoryRepository(sequelize, modelName);
   const service = new CategoryService(repository);
-  const controller = wrapClassMethods(new CategoryHttpService(service))
+  const controller = wrapClassMethods<CategoryHttpService>(new CategoryHttpService(service))
   const router = Router();
 
   const introspect = new Introspect(config.rpc.userRPC);

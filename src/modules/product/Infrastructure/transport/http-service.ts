@@ -31,45 +31,35 @@ export class ProductHttpService
     ProductCreateType,
     ProductUpdateType
   >
-  implements IProductHttpService
-{
-  constructor(
-    createHandler: ICommandHandler<
-      IBaseCreateService<ProductCreateType>,
-      ProductType
-    >,
-    detailQuery: IQueryHandler<IBaseGetDetail, ProductType>,
-    updateHandler: ICommandHandler<
-      IBaseUpdateService<ProductUpdateType>,
-      ProductType
-    >,
+  implements IProductHttpService {
+  private readonly productBranchRepo: IPRCProductBranchQueryRepository;
+  private readonly productCategoryRepo: IRPCCategoryQueryRepository;
+
+  constructor(handlers: {
+    createHandler: ICommandHandler<IBaseCreateService<ProductCreateType>, ProductType>;
+    detailQuery: IQueryHandler<IBaseGetDetail, ProductType>;
+    updateHandler: ICommandHandler<IBaseUpdateService<ProductUpdateType>, ProductType>;
     listQuery: IQueryHandler<
       IBaseGetList<ProductCondType, pagingDTO>,
       { data: Array<ProductType>; paging: pagingDTO }
-    >,
-    deleteHandler: ICommandHandler<IBaseDeleteService, boolean>,
-    bycondQuery: IQueryHandler<IBaseGetByCond<ProductCondType>, ProductType>,
-    private readonly productBranchRepo: IPRCProductBranchQueryRepository,
-    private readonly productCategoryRepo: IRPCCategoryQueryRepository
-  ) {
-    super(
-      createHandler,
-      detailQuery,
-      updateHandler,
-      listQuery,
-      deleteHandler,
-      bycondQuery
-    );
+    >;
+    deleteHandler: ICommandHandler<IBaseDeleteService, boolean>;
+    bycondQuery: IQueryHandler<IBaseGetByCond<ProductCondType>, ProductType>;
+    productBranchRepo: IPRCProductBranchQueryRepository;
+    productCategoryRepo: IRPCCategoryQueryRepository;
+  }) {
+    super(handlers);
+    this.productBranchRepo = handlers.productBranchRepo;
+    this.productCategoryRepo = handlers.productCategoryRepo;
   }
 
   // rpc tầng transport
-
   detailAPI = async (req: Request, res: Response): Promise<void> => {
     const productId = req.params.id;
-    if (!productId) 
-      throw new Error("productId not found");
-    
-    const product = await this.detailQuery.query({ id: productId });
+    if (!productId) throw new Error("productId not found");
+
+    const product = await this.detailQuery!.query({ id: productId }); // Use non-null assertion here
+
     const branchId = product?.branchId;
     const categoryId = product?.categoryId;
     if (branchId) {

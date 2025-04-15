@@ -55,16 +55,17 @@ export const setupUserModule = (sequelize: Sequelize) => {
 
   const verifyToken = new VerifyTokenCommand(repository, jwtService);
 
-  const controller = wrapClassMethods<UserHttpService>(new UserHttpService(
-    createHandler,
-    detailQuery,
-    updateHandler,
-    listQuery,
-    deleteHandler,
-    byCondQuery,
-    login,
-    resister
-  )) 
+  const controller = wrapClassMethods<UserHttpService>(new UserHttpService({
+    createHandler: createHandler,
+    detailQuery: detailQuery,
+    updateHandler: updateHandler,
+    listQuery: listQuery,
+    deleteHandler: deleteHandler,
+    bycondQuery: byCondQuery,
+    login: login,
+    resister: resister
+  }));
+  
   const router = Router();
 
   router.post("/auth/login", controller.loginAPI);

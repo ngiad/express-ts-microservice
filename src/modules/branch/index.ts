@@ -43,14 +43,15 @@ export const setupBranchModule = (sequelize: Sequelize) => {
   const listQuery = new GetListBranch(repository);
   const byCondQuery = new GetByCondBranchService(repository);
 
-  const controller = wrapClassMethods<BranchHttpService>(new BranchHttpService(
-    createHandler,
-    detailQuery,
-    updateHandler,
-    listQuery,
-    deleteHandler,
-    byCondQuery
-  ))
+  const controller = wrapClassMethods<BranchHttpService>(new BranchHttpService({
+    createHandler: createHandler,
+    detailQuery: detailQuery,
+    updateHandler: updateHandler,
+    listQuery: listQuery,
+    deleteHandler: deleteHandler,
+    bycondQuery: byCondQuery
+  }))
+  
 
   const introspect = new Introspect(config.rpc.userRPC)
 

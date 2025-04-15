@@ -10,3 +10,5 @@ export class RPCBranchService extends RPCBaseService<BranchType,BranchCondType> 
     super(_rpcBranchQueryRepo);
   }
 }
+
+

@@ -312,3 +312,32 @@ Elasticsearch
 ├── package.json
 ├── package-lock.json
 └── README.md
+
+
+kiến trúc DDD kết hợp clean architecture
+
+├── transport
+│   ├── http
+│   │   ├── controllers
+│   │   ├── routes
+│   │   ├── middlewares
+│   │   └── server.ts  # Khởi tạo HTTP server (Express / Fastify)
+├── application
+│   ├── commands
+│   ├── queries
+│   ├── services
+│   └── ...
+├── domain
+│   ├── entities
+│   ├── repositories (interface)
+│   └── ...
+├── infrastructure
+│   ├── persistence
+│   │   ├── sequelize
+│   │   └── mongo
+│   ├── auth-providers
+│   ├── mail-service
+│   └── logger
+├── security
+├── utils
+└── index.ts # Entry point: chỉ import transport layer

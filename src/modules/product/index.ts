@@ -5,6 +5,7 @@ import {
   ProductCommandRepository,
   ProductQueryRepository,
   ProductRepository,
+  RPCProductRepository,
 } from "./repository/mysql/repo";
 import { CreateProductService } from "./usecase/create";
 import { ProductHttpService } from "./Infrastructure/transport/http-service";
@@ -25,6 +26,7 @@ import { authGlobalMiddleware } from "../../share/middleware/auth";
 import { UserRole } from "../../share/interface";
 import { Introspect } from "../../share/repository/introspec-rpc";
 import { wrapClassMethods } from "../../share/utils/wrapClassMethods";
+import { ProductRPCService } from "./Infrastructure/rpc";
 
 export const setupProductModule = (sequelize: Sequelize) => {
   init(sequelize);
@@ -70,17 +72,16 @@ export const setupProductModule = (sequelize: Sequelize) => {
   );
   const byCondQuery = new GetProductByCondService(repository);
 
-  const controller = wrapClassMethods<ProductHttpService>(new ProductHttpService(
-    createHandler,
-    detailQuery,
-    updateHandler,
-    listQuery,
-    deleteHandler,
-    byCondQuery,
-    // productBranchRepo,
-    proxyProductBranchRepo, // demo proxy pattern
-    productCategoryRepo
-  ))
+  const controller = wrapClassMethods<ProductHttpService>(new ProductHttpService({
+    createHandler: createHandler,
+    detailQuery: detailQuery,
+    updateHandler: updateHandler,
+    listQuery: listQuery,
+    deleteHandler: deleteHandler,
+    bycondQuery: byCondQuery,
+    productBranchRepo: proxyProductBranchRepo, // demo proxy pattern
+    productCategoryRepo: productCategoryRepo
+  }));
 
   const introspect = new Introspect(config.rpc.userRPC);
 
@@ -109,5 +110,14 @@ export const setupProductModule = (sequelize: Sequelize) => {
     roleHandlingGlobalMiddleware([UserRole.BRANCH, UserRole.ADMIN]),
     controller.deleteAPI
   );
+
+
+  // RPC 
+  const rpcProductRepository = new RPCProductRepository(sequelize, modelProductName)
+  const rpcProductService = wrapClassMethods(new ProductRPCService(rpcProductRepository)) 
+
+  router.get("/rpc/products/:id", rpcProductService.getByIdRPC)
+  router.get("/rpc/products", rpcProductService.getbylistRPC)
+  router.get("/rpc/products/by", rpcProductService.getByCondRPC)
   return router;
 };

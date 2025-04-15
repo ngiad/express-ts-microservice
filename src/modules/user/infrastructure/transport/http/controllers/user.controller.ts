@@ -37,40 +37,37 @@ export class UserHttpService
     UserCreateType | RegisterType,
     UserUpdateType | UserUpdateProfileType | UserUpdatePasswordType
   >
-  implements IUserHttpService
-{
-  constructor(
-    createHandler: ICommandHandler<IUserCreateCommand, UserResponseType>,
-    detailQuery: IQueryHandler<IUserDetailQuery, UserResponseType>,
-    updateHandler: ICommandHandler<IUserUpdateCommand, UserResponseType>,
+  implements IUserHttpService {
+  private readonly login: ICommandHandler<ILoginCommand, TokenType>;
+  private readonly resister: ICommandHandler<IResisterCommand, TokenType>;
+
+  constructor(handlers: {
+    createHandler: ICommandHandler<IUserCreateCommand, UserResponseType>;
+    detailQuery: IQueryHandler<IUserDetailQuery, UserResponseType>;
+    updateHandler: ICommandHandler<IUserUpdateCommand, UserResponseType>;
     listQuery: IQueryHandler<
       IUserListQuery,
       { data: Array<UserResponseType>; paging: pagingDTO }
-    >,
-    deleteHandler: ICommandHandler<IUserDeleteCommand, boolean>,
-    byCondQuery: IQueryHandler<IUserByCondQuery, UserResponseType>,
-    private readonly login: ICommandHandler<ILoginCommand, TokenType>,
-    private readonly resister: ICommandHandler<IResisterCommand, TokenType>
-  ) {
-    super(
-      createHandler,
-      detailQuery,
-      updateHandler,
-      listQuery,
-      deleteHandler,
-      byCondQuery
-    );
+    >;
+    deleteHandler: ICommandHandler<IUserDeleteCommand, boolean>;
+    bycondQuery: IQueryHandler<IUserByCondQuery, UserResponseType>;
+    login: ICommandHandler<ILoginCommand, TokenType>;
+    resister: ICommandHandler<IResisterCommand, TokenType>;
+  }) {
+    super(handlers);
+    this.login = handlers.login;
+    this.resister = handlers.resister;
   }
 
   loginAPI = async (req: Request, res: Response) => {
     new ResponseSuccess<TokenType>(await this.login.execute({
-        data : req.body
-     })).send(res)
+      data: req.body
+    })).send(res);
   };
 
-  registerAPI = async(req: Request, res: Response): Promise<void> =>{
+  registerAPI = async (req: Request, res: Response): Promise<void> => {
     new ResponseSuccess<TokenType>(await this.resister.execute({
-        data : req.body
-     })).send(res)
-  }
+      data: req.body
+    })).send(res);
+  };
 }

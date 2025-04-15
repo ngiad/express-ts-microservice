@@ -23,30 +23,17 @@ export class BranchHttpService extends BaseHttpService<
   BranchCreateType,
   BranchUpdateType
 > {
-  constructor(
-    createBranchHandler: ICommandHandler<
-      IBaseCreateService<BranchCreateType>,
-      BranchType
-    >,
-    detailBranchQuery: IQueryHandler<IBaseGetDetail, BranchType>,
-    updateBranchHandler: ICommandHandler<
-      IBaseUpdateService<BranchUpdateType>,
-      BranchType
-    >,
-    listBranchQuery: IQueryHandler<
+  constructor(handlers: {
+    createHandler: ICommandHandler<IBaseCreateService<BranchCreateType>, BranchType>;
+    detailQuery: IQueryHandler<IBaseGetDetail, BranchType>;
+    updateHandler: ICommandHandler<IBaseUpdateService<BranchUpdateType>, BranchType>;
+    listQuery: IQueryHandler<
       IBaseGetList<BranchCondType, pagingDTO>,
       { data: Array<BranchType>; paging: pagingDTO }
-    >,
-    deleteBranchHandler: ICommandHandler<IBaseDeleteService, boolean>,
-    byCondBranchQuery: IQueryHandler<IBaseGetByCond<BranchCondType>, BranchType>
-  ) {
-    super(
-      createBranchHandler,
-      detailBranchQuery,
-      updateBranchHandler,
-      listBranchQuery,
-      deleteBranchHandler,
-      byCondBranchQuery
-    );
+    >;
+    deleteHandler: ICommandHandler<IBaseDeleteService, boolean>;
+    bycondQuery: IQueryHandler<IBaseGetByCond<BranchCondType>, BranchType>;
+  }) {
+    super(handlers);
   }
 }

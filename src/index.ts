@@ -7,6 +7,7 @@ import { setupProductModule } from "./modules/product";
 import { setupUserModule } from "./modules/user";
 import { performenceMiddleware } from "./share/middleware/performance";
 import { errorResponse } from "./share/utils/ErrorResponse";
+import { setupCartModule } from "./modules/cart";
 
 dotenv.config();
 
@@ -29,7 +30,7 @@ dotenv.config();
     app.use("/v1/api", setupBranchModule(sequelize));
     app.use("/v1/api", setupProductModule(sequelize));
     app.use("/v1/api", setupUserModule(sequelize));
-
+    app.use("/v1/api", setupCartModule(sequelize));
 
 
     app.use(errorResponse)
