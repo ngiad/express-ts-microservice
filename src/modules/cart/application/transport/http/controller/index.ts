@@ -17,10 +17,12 @@ import {
   CartCreateType,
   CartUpdateType,
 } from "../../../../domain/object-value";
-import { ICreateCartItemCommand } from "../../../interface";
+import { ICreateCartItemCommand, IDeleteCartItemCommand, IUpdateCartItemCommand } from "../../../interface";
 import {
   ResponseSuccessCreate,
+  ResponseSuccessDelete,
   ResponseSuccessList,
+  ResponseSuccessUpdate,
 } from "../../../../../../share/response/response.success";
 import { ResponseErrorNotFound } from "../../../../../../share/response/response.error";
 
@@ -42,14 +44,14 @@ export class CartHttpController
   constructor(handlers: {
     createHandler: ICommandHandler<ICreateCartItemCommand, CartResponseType>;
     updateHandler: ICommandHandler<
-      IBaseUpdateService<CartUpdateType>,
+    IUpdateCartItemCommand,
       CartResponseType
     >;
     listQuery: IQueryHandler<
       IBaseGetList<CartCondType, pagingDTO>,
       { data: Array<CartResponseType>; paging: pagingDTO }
     >;
-    deleteHandler: ICommandHandler<IBaseDeleteService, boolean>;
+    deleteHandler: ICommandHandler<IDeleteCartItemCommand, boolean>;
   }) {
     super(handlers);
   }
@@ -72,5 +74,24 @@ export class CartHttpController
         userId: res.locals.user.id,
       }} as unknown as IBaseGetList<CartCondType, pagingDTO>)
     ).send(res);
+  };
+
+  updateAPI = async (req: Request, res: Response) => {
+    new ResponseSuccessUpdate<CartResponseType>(
+      await this.updateHandler!.execute({
+        id: req.params.id,
+        data: {
+          ...req.body,
+          userId: res.locals.user.id,
+        },
+      })
+    ).send(res);
+  };
+  
+  deleteAPI = async (req: Request, res: Response) => {
+    new ResponseSuccessDelete<boolean>(await this.deleteHandler!.execute({
+      id: req.params.id,
+      userId: res.locals.user.id,
+    } as any) ).send(res)
   };
 }

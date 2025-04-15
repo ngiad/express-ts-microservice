@@ -5,18 +5,20 @@ import {
 import { CartResponseType } from "../../../domain/entities/card.entity";
 import { CartUpdateSchema, CartUpdateType } from "../../../domain/object-value";
 import { ICartRepository } from "../../../domain/repositories/card.repository";
-import { ErrCartIdNotFound, ErrCartIdnotvalidate } from "../../error";
+import { ErrCartIdNotFound, ErrCartIdnotvalidate, ErrCartUserForbidden } from "../../error";
+import { IUpdateCartItemCommand } from "../../interface";
 
 export class UpdateCartItemCommand
   implements
-    ICommandHandler<IBaseUpdateService<CartUpdateType>, CartResponseType>
+    ICommandHandler<IUpdateCartItemCommand, CartResponseType>
 {
   constructor(private readonly _repository: ICartRepository) {}
 
   execute = async (
-    command: IBaseUpdateService<CartUpdateType>
+    command: IUpdateCartItemCommand
   ): Promise<CartResponseType> => {
     if(!command.id) throw ErrCartIdnotvalidate
+    if(!command.userId) throw ErrCartUserForbidden
 
     const validate = CartUpdateSchema.safeParse(command.data)
 
@@ -26,7 +28,8 @@ export class UpdateCartItemCommand
         id : command.id
     })
 
-    if(cart) throw ErrCartIdNotFound
+    if(!cart) throw ErrCartIdNotFound
+    if(cart.userId !== command.userId) throw ErrCartUserForbidden
     return await this._repository.update(command.id, command.data);
   };
 }

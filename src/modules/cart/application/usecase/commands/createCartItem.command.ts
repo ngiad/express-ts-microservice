@@ -8,7 +8,7 @@ import {
 import { ICartRepository } from "../../../domain/repositories/card.repository";
 import { ICreateCartItemCommand } from "../../interface";
 import { IProductRPCRepository } from "../../../domain/repositories/product.rpc.repository";
-import { ErrProductNotfound } from "../../error";
+import { ErrCartUserForbidden, ErrProductNotfound } from "../../error";
 
 export class CreateCartItemCommand
   implements ICommandHandler<ICreateCartItemCommand, CartResponseType>
@@ -29,6 +29,7 @@ export class CreateCartItemCommand
       productId: validate.data.productId,
       attributes: validate.data.attributes,
     });
+    if(!validate.data.userId) throw ErrCartUserForbidden
 
     if (cartExist) {
       const update = CartUpdateSchema.parse(cartExist);
