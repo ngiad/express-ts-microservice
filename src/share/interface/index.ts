@@ -126,3 +126,11 @@ export type UserResponseGlobalType = z.infer<typeof UserGlobalResponseSchema>;
 export interface IIntrospect{
   verify(token : string):Promise<UserResponseGlobalType>
 }
+
+
+export interface IRedisClient {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string, ttlInSeconds?: number): Promise<void>;
+}
+
+

@@ -1,11 +1,7 @@
 import { Request, Response } from "express";
 import {
-  IBaseDeleteService,
-  IBaseGetByCond,
-  IBaseGetDetail,
   IBaseGetList,
   IBaseHttpService,
-  IBaseUpdateService,
   ICommandHandler,
   IQueryHandler,
 } from "../../../../../../share/interface";
@@ -24,7 +20,6 @@ import {
   ResponseSuccessList,
   ResponseSuccessUpdate,
 } from "../../../../../../share/response/response.success";
-import { ResponseErrorNotFound } from "../../../../../../share/response/response.error";
 
 export class CartHttpController
   extends BaseHttpService<

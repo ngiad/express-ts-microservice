@@ -12,7 +12,7 @@ export const CartItemBranchSchema = z.object({
 export type CartItemBranchType = z.infer<typeof CartItemBranchSchema>;
 
 export const CartProductSchema = z.object({
-  id: z.string().optional(),
+  id: z.string(),
   name: z.string().optional(),
   image: z.string().optional(),
   price: z.coerce.number().optional(),

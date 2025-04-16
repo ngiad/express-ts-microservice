@@ -15,7 +15,8 @@ import { ProductDetailService } from "./usecase/detail";
 import { ListProductService } from "./usecase/list";
 import { GetProductByCondService } from "./usecase/bycond";
 import {
-  ProxyProductBranchRopository,
+  ProxyProductBranchRepository,
+  ProxyProductCategopryRepository,
   RPCProductBranchRopository,
   RPCProductCategoryRopository,
 } from "./repository/rpc-repository";
@@ -48,8 +49,12 @@ export const setupProductModule = (sequelize: Sequelize) => {
   );
 
   // proxy pattern demo
-  const proxyProductBranchRepo = new ProxyProductBranchRopository(
+  const proxyProductBranchRepo = new ProxyProductBranchRepository(
     productBranchRepo
+  );
+
+  const proxyProductCategoryRepo = new ProxyProductCategopryRepository(
+    productCategoryRepo
   );
 
   const repository = new ProductRepository(
@@ -80,7 +85,7 @@ export const setupProductModule = (sequelize: Sequelize) => {
     deleteHandler: deleteHandler,
     bycondQuery: byCondQuery,
     productBranchRepo: proxyProductBranchRepo, // demo proxy pattern
-    productCategoryRepo: productCategoryRepo
+    productCategoryRepo: proxyProductCategoryRepo
   }));
 
   const introspect = new Introspect(config.rpc.userRPC);

@@ -8,6 +8,7 @@ import { setupUserModule } from "./modules/user";
 import { performenceMiddleware } from "./share/middleware/performance";
 import { errorResponse } from "./share/utils/ErrorResponse";
 import { setupCartModule } from "./modules/cart";
+import { Redis } from "./share/component/redis";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ dotenv.config();
 
     const app: Express = express();
     const port = process.env.PORT || 3321;
+    Redis.start(process.env.REDIS_URL || "");
 
     app.use(express.json());
     app.use(performenceMiddleware)
