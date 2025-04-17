@@ -1,0 +1,79 @@
+version: '3.8' # Phiên bản Docker Compose
+
+services:
+  # Định nghĩa service cho ứng dụng Express.js
+  app:
+    container_name: express_app # Tên container
+    build: . # Chỉ dẫn Docker Compose xây dựng image từ Dockerfile trong thư mục hiện tại
+    ports:
+      - "3321:3321" # Ánh xạ cổng 3321 của máy host vào cổng 3321 của container (nơi app chạy)
+    volumes:
+      # Mount code vào container để hot-reload với nodemon
+      # Lưu ý: Điều này phù hợp cho môi trường development
+      - .:/usr/src/app
+      # Volume riêng cho node_modules để tránh bị ghi đè bởi thư mục trên máy host
+      - /usr/src/app/node_modules
+    env_file:
+      - .env # Nạp các biến môi trường từ file .env
+    environment:
+      # Ghi đè hoặc bổ sung biến môi trường nếu cần
+      # Các biến kết nối sẽ dùng tên service làm host name
+      DB_HOST: ${MYSQL_HOST}
+      DB_PORT: ${MYSQL_PORT}
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      PORT: ${PORT}
+      NODE_ENV: ${NODE_ENV}
+    depends_on:
+      - db # Đảm bảo service 'db' khởi động trước 'app'
+      - cache # Đảm bảo service 'cache' khởi động trước 'app'
+    networks:
+      - app_network # Kết nối service này vào mạng 'app_network'
+    command: npm start # Lệnh để chạy ứng dụng (ghi đè CMD trong Dockerfile nếu cần)
+
+  # Định nghĩa service cho MySQL
+  db:
+    container_name: mysql
+    image: bitnami/mysql:8.0 # Sử dụng image từ Docker Hub
+    ports:
+      - "3309:3306" # Ánh xạ cổng 3309 của máy host vào cổng 3306 của MySQL container
+    environment:
+      # Các biến môi trường cấu hình cho MySQL (lấy từ .env)
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - mysql_data:/bitnami/mysql/data # Sử dụng named volume để lưu trữ dữ liệu MySQL bền vững
+    networks:
+      - app_network
+    restart: always # Tự động khởi động lại nếu gặp lỗi
+
+  # Định nghĩa service cho Redis
+  cache:
+    container_name: redis
+    image: bitnami/redis:latest # Sử dụng image từ Docker Hub
+    ports:
+      - "6379:6379" # Ánh xạ cổng 6379 của máy host vào cổng 6379 của Redis container
+    environment:
+      # Biến môi trường cấu hình cho Redis (lấy từ .env)
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/bitnami/redis/data # Sử dụng named volume để lưu trữ dữ liệu Redis (nếu cần)
+    networks:
+      - app_network
+    restart: always # Tự động khởi động lại nếu gặp lỗi
+
+# Định nghĩa named volumes
+volumes:
+  mysql_data:
+  redis_data:
+
+# Định nghĩa mạng tùy chỉnh
+networks:
+  app_network:
+    driver: bridge # Sử dụng bridge driver mặc định
