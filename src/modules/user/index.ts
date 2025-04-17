@@ -15,7 +15,7 @@ import { BcryptService } from "./infrastructure/security/bcrypt.service";
 import { UserUpdateCommand } from "./application/commands/userUpdate";
 import { UserDeleteCommand } from "./application/commands/userDelete.command";
 import { UserListQuery } from "./application/queries/list.query";
-import { UserDetailQuery } from "./application/queries/detail.query";
+import { ProxyUserDetailQuery, UserDetailQuery } from "./application/queries/detail.query";
 import { UserByCondQuery } from "./application/queries/bycond.query";
 import { UserHttpService } from "./infrastructure/transport/http/controllers/user.controller";
 import { LoginCommand } from "./application/commands/login.command";
@@ -50,6 +50,8 @@ export const setupUserModule = (sequelize: Sequelize) => {
   const listQuery = new UserListQuery(repository);
   const byCondQuery = new UserByCondQuery(repository);
 
+  const proxyDetailQuery = new ProxyUserDetailQuery(detailQuery)
+
   const login = new LoginCommand(repository, bcryptService, jwtService);
   const resister = new RegisterCommand(repository, bcryptService, jwtService);
 
@@ -57,7 +59,7 @@ export const setupUserModule = (sequelize: Sequelize) => {
 
   const controller = wrapClassMethods<UserHttpService>(new UserHttpService({
     createHandler: createHandler,
-    detailQuery: detailQuery,
+    detailQuery: proxyDetailQuery,
     updateHandler: updateHandler,
     listQuery: listQuery,
     deleteHandler: deleteHandler,

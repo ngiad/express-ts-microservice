@@ -134,3 +134,12 @@ export interface IRedisClient {
 }
 
 
+export interface CacheStrategyOptions<T> {
+  keyParts: (string | number | undefined | null)[];
+  prefix?: string;
+  ttlLevel?: number; // 0 - 10 (0 = k có TTL)
+  hashKeyIfLong?: boolean;
+  fetch: () => Promise<T>;
+}
+
+
