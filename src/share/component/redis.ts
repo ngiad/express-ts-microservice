@@ -104,3 +104,98 @@ export class Redis{
     }
   }
 }
+
+
+export class RedisPubSubService {
+  private static publisher: RedisClientType | null = null;
+  private static subscriber: RedisClientType | null = null;
+  private static isConnected = false;
+  private static subscriptions = new Map<string, (message: string) => void>();
+
+  static async connect(url: string): Promise<void> {
+    if (this.isConnected) return;
+
+    this.publisher = createClient({ url });
+    this.subscriber = createClient({ url });
+
+    this.publisher.on('error', console.error);
+    this.subscriber.on('error', console.error);
+
+    this.subscriber.on('message', (channel, message) => {
+      const handler = this.subscriptions.get(channel);
+      if (handler) {
+        try {
+          handler(message);
+        } catch (err) {
+          console.error(`Error in handler for channel "${channel}":`, err);
+        }
+      }
+    });
+
+    await Promise.all([
+      this.publisher.connect(),
+      this.subscriber.connect()
+    ]);
+
+    this.isConnected = true;
+    console.log('[RedisPubSub] Connected.');
+    for (const [channel, handler] of this.subscriptions) {
+      await this.subscriber.subscribe(channel, (message) => {
+        handler(message);
+      });
+    }
+  }
+
+  static async publish(channel: string, message: string): Promise<void> {
+    if (!this.publisher?.isReady) {
+      throw new Error('Redis publisher not connected');
+    }
+    await this.publisher.publish(channel, message);
+  }
+
+  static async subscribe(channel: string, handler: (message: string) => void): Promise<void> {
+    if (this.subscriptions.has(channel)) {
+      console.warn(`[RedisPubSub] Already subscribed to channel "${channel}"`);
+      return;
+    }
+
+    this.subscriptions.set(channel, handler);
+
+    if (this.subscriber?.isReady) {
+      await this.subscriber.subscribe(channel, (message) => {
+        handler(message);
+      });
+    }
+  }
+
+  static async unsubscribe(channel: string): Promise<void> {
+    if (this.subscriptions.has(channel)) {
+      this.subscriptions.delete(channel);
+      if (this.subscriber?.isReady) {
+        await this.subscriber.unsubscribe(channel);
+      }
+    }
+  }
+
+  static async disconnect(): Promise<void> {
+    const tasks: Promise<any>[] = [];
+
+    if (this.subscriber?.isReady) {
+      for (const channel of this.subscriptions.keys()) {
+        tasks.push(this.subscriber.unsubscribe(channel));
+      }
+      tasks.push(this.subscriber.quit());
+    }
+
+    if (this.publisher?.isReady) {
+      tasks.push(this.publisher.quit());
+    }
+
+    await Promise.all(tasks);
+    this.publisher = null;
+    this.subscriber = null;
+    this.isConnected = false;
+    this.subscriptions.clear();
+    console.log('[RedisPubSub] Disconnected.');
+  }
+}

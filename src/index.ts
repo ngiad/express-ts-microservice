@@ -8,7 +8,8 @@ import { setupUserModule } from "./modules/user";
 import { performenceMiddleware } from "./share/middleware/performance";
 import { errorResponse } from "./share/utils/ErrorResponse";
 import { setupCartModule } from "./modules/cart";
-import { Redis } from "./share/component/redis";
+import { Redis, RedisPubSubService } from "./share/component/redis";
+import { CART_NOTIFICATION_TO_BRANCH_CHANNEL } from "./share/events";
 
 dotenv.config();
 
@@ -21,7 +22,8 @@ dotenv.config();
 
     const app: Express = express();
     const port = process.env.PORT || 3321;
-    Redis.start(process.env.REDIS_URL || "");
+    await Redis.start(process.env.REDIS_URL || "");
+    await RedisPubSubService.connect(process.env.REDIS_URL || "");
 
     app.use(express.json());
     app.use(performenceMiddleware)
@@ -37,6 +39,13 @@ dotenv.config();
 
     app.use(errorResponse)
 
+
+    // test subscribe
+    RedisPubSubService.subscribe(CART_NOTIFICATION_TO_BRANCH_CHANNEL, (message) => {
+      console.log('-------------------------------- ĐÂY LÀ subscribe MESSAGE -------------------------------');
+      console.log(message);
+      console.log('-------------------------------- ĐÂY LÀ subscribe MESSAGE -------------------------------');
+    });
 
     app.listen(port, () => {
       console.log(`server is running on : http://localhost:${port}`);

@@ -1,0 +1,1 @@
+export const CART_NOTIFICATION_TO_BRANCH_CHANNEL = 'cart-notification-to-branch';
