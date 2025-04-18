@@ -26,6 +26,7 @@ import { VerifyTokenCommand } from "./application/commands/verifyToken.command";
 import {
   authMiddleware,
   roleHandlingMiddleware,
+  userForbiddenMiddleware,
 } from "./infrastructure/transport/http/middleware";
 import { UserRole } from "./application/dto";
 import { RPCUserService } from "./infrastructure/transport/rpc";
@@ -84,13 +85,13 @@ export const setupUserModule = (sequelize: Sequelize) => {
   router.patch(
     "/users/:id",
     authMiddleware(verifyToken),
-    roleHandlingMiddleware([UserRole.ADMIN, UserRole.BRANCH, UserRole.USER]),
+    userForbiddenMiddleware(),
     controller.updateAPI
   );
   router.delete(
     "/users/:id",
     authMiddleware(verifyToken),
-    roleHandlingMiddleware([UserRole.ADMIN, UserRole.BRANCH, UserRole.USER]),
+    roleHandlingMiddleware([UserRole.ADMIN]),
     controller.deleteAPI
   );
 
